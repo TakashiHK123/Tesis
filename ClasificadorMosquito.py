@@ -160,24 +160,27 @@ def posicionExpulsion(grados):
 
 
 def deteccionMosquito():
-    while True:
-        # Lee el valor del pin GPIO
-        value = GPIO.input(pin_sensor)
-        estado = 0 #estados 0 aun no se detecto el mosquito, 1 se a detectado
+    # Lee el valor del pin GPIO
+    value = GPIO.input(pin_sensor)
+    estado = 0 #estados 0 aun no se detecto el mosquito, 1 se a detectado
+    detected = False
+    while not detected:
+
         if value == GPIO.HIGH:
             print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
             estado = 1
             print(value)
-            return False
+            return detected
             # Realiza acciones específicas para objetos blancos
         else:
             print('No hay mosquitos')
             if estado == 1:
                 print('El mosquito a ingresado, proceder a cerrar la compuerta')
                 estado = 0
-                return True
+                detected = True
+                return detected
             print(value)
-            return False
+            return detected
             # Realiza acciones específicas para objetos negros
 
         # Espera un tiempo antes de la siguiente lectura
@@ -254,8 +257,9 @@ def detectar_frecuencia_usb(capturador):
     frecuencias = np.fft.fftfreq(longitud_senal, 1 / frecuencia_muestreo)
     amplitudes_iniciales = np.zeros(longitud_senal)
     line, = ax.plot(frecuencias, amplitudes_iniciales)
+    detected = True
     try:
-        while True:
+        while detected:
 
             # Leer datos del microfono USB
             longitud_buffer = len(capturador.read()[1])
@@ -289,14 +293,10 @@ def detectar_frecuencia_usb(capturador):
                     print(f'Decibelios:{rms_level_db}')
                     print(f'Frecuencia: {frecuencia_dominante} Hz')
                     time.sleep(0.01)
+                    detected = False
                     return frecuencia_dominante
     except KeyboardInterrupt:
         pass
-    finally:
-        # Cerrar el micrófono al finalizar
-        #mic_configurado.close()
-        #plt.ioff()  # Desactivar el modo interactivo de Matplotlib
-        #plt.show(block=True)  # Esperar a que se cierre la ventana antes de finalizar
 
 if __name__ == '__main__':
     hasRun = False
@@ -310,35 +310,33 @@ if __name__ == '__main__':
     #etapa = 1 se detecto el mosquito y a pasado al seleccionador para cerrar la compuerta
     #etapa = 2 el mosquito paso todo para cerrar la compuerta y proceder a la clasificacion
     while not hasRun:
-        etapa = 0
-        if etapa == 0 :
-            compuertaAbierta() #Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
-
-        if deteccionMosquito()==True:
-            etapa = 1
+        to0grados()
+        compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
+        detectado = deteccionMosquito()
+        if detectado==True:
             compuertaCerrada()
-        if deteccionMosquito()==False and etapa == 1:
-            etapa = 2
-        if etapa==2:
+            print("Para el succionador")
+            time.sleep(5)
             print('Se procede a la clasificacion del mosquito')
             # Configurar el microfono fuera de la funcion
             # Ejecutar el detector de frecuencia con la configuracion del microfono
             frecuencia = detectar_frecuencia_usb(mic_configurado)
+            compuertaPosicion = 0
             if frecuencia >= 500 and frecuencia <=630:
-                print('se a detectado un mosquito')
+                print('se a detectado un mosquito entre los rango 500 y 630')
+                # steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
+                compuertaPosicion=1 #seria la compuerta correspondiente a cierto mosquito
+            if frecuencia >= 630 and frecuencia <=800:
+                compuertaPosicion = 2
 
-        # steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
-        posicionExpulsion(siguiente * compuerta)
-        # GPIO.output(succionFan, GPIO.LOW)
-        # GPIO.output(empujeFan, GPIO.HIGH)
-        to0grados()
-        time.sleep(5)
-        # steps(-grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens anti-horaire
-        retorno(siguiente * compuerta)
-        # GPIO.output(empujeFan, GPIO.LOW)
-        # GPIO.output(succionFan, GPIO.HIGH)
-        to90grados()
-        time.sleep(5)
+            if compuertaPosicion != 0:
+                posicionExpulsion(siguiente * compuertaPosicion)
+                to90grados()
+                print("se enciende succionador para el empuje")
+                time.sleep(5)
+                retorno(siguiente * compuertaPosicion)
+                compuertaPosicion = 0
+
         # hasRun=True
     print("Stop motor")
     # GPIO.output(succionFan, GPIO.LOW)
