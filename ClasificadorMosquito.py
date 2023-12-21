@@ -235,8 +235,7 @@ def configurar_mic():
     if 1 <= seleccion <= len(dispositivos_usb):
 
         # Configurar el micrófono seleccionado con 1 canal (mono)
-        mic_configurado = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL,
-                                        cardindex=2)  # Reemplaza 2 con tu cardindex
+        mic_configurado = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=2)  # Reemplaza 2 con tu cardindex
         mic_configurado.setchannels(1)  # Establecer el número de canales a 1 (mono)
         mic_configurado.setrate(frecuencia_muestreo)  # Establecer la frecuencia de muestreo a 44.1 kHz
         mic_configurado.setformat(alsaaudio.PCM_FORMAT_S16_LE)  # Establecer el formato de audio a 16 bits little-endian
