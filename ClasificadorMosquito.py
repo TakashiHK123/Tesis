@@ -9,6 +9,7 @@ import time
 import pyudev
 import matplotlib.pyplot as plt
 
+GPIO.cleanup()
 # Inicializar el gráfico
 plt.ion()  # Habilitar modo interactivo
 fig, ax = plt.subplots()
@@ -25,6 +26,7 @@ frecuencia_muestreo = 44100 # Establecer la frecuencia de muestreo a 42.667 kHz
 # Use BCM GPIO references
 # Instead of physical pin numbers
 GPIO.setmode(GPIO.BCM)
+
 # Define GPIO signals to use Pins 18,22,24,26 GPIO24,GPIO25,GPIO8,GPIO7
 StepPins = [17, 18, 27, 22]
 # Set all pins as output
