@@ -14,7 +14,7 @@ ax.set_title('FFT en tiempo real')
 ax.set_xlabel('Frecuencia (Hz)')
 ax.set_ylabel('Amplitud')
 #frecuencias = np.fft.fftfreq(512, 1 / 44100)  # Ajustar según el tamaño del periodo
-ax.set_xlim(0,  6000)  # Ajustar según la frecuencia de muestreo
+ax.set_xlim(0,  2000)  # Ajustar según la frecuencia de muestreo
 ax.set_ylim(-1800000, 1800000)
 longitud_senal = 1024 #Tamanho del bufer de lectura
 frecuencia_muestreo = 44100 # Establecer la frecuencia de muestreo a 42.667 kHz
