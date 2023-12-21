@@ -82,28 +82,28 @@ StepCount = StepCount2
 
 
 def to90grados():
-    for angle in range(0, 100, 100):
-        duty_cycle = 2.5 + (angle / 18.0)
-        p.ChangeDutyCycle(duty_cycle)
+    for angle9 in range(0, 100, 100):
+        duty_cycle9 = 2.5 + (angle9 / 18.0)
+        p.ChangeDutyCycle(duty_cycle9)
         time.sleep(0.5)
 
 
 def to0grados():
-    for angle in range(110, -1, -110):
-        duty_cycle = 2.5 + (angle / 18.0)
-        p.ChangeDutyCycle(duty_cycle)
+    for angle0 in range(110, -1, -110):
+        duty_cycle0 = 2.5 + (angle0 / 18.0)
+        p.ChangeDutyCycle(duty_cycle0)
         time.sleep(0.5)
 
 def compuertaAbierta():
-    for angle in range(60,-1,-60):
-        duty_cycle = 2.5 +(angle/18.0)
-        c.ChangeDutyCycle(duty_cycle)#Cuando esta abierto
+    for angleA in range(60,-1,-60):
+        duty_cycleA = 2.5 +(angleA/18.0)
+        c.ChangeDutyCycle(duty_cycleA)#Cuando esta abierto
         time.sleep(0.5)
 
 def compuertaCerrada():
     for angleY in range(0,60,60):
-        duty_cycle = 2.5 + (angleY/18.0)
-        c.ChangeDutyCycle(duty_cycle)
+        duty_cycleY = 2.5 + (angleY/18.0)
+        c.ChangeDutyCycle(duty_cycleY)
         time.sleep(0.5)
 
 def steps(nb):
@@ -308,7 +308,9 @@ if __name__ == '__main__':
     #etapa = 0 no se detecta aun mosquito
     #etapa = 1 se detecto el mosquito y a pasado al seleccionador para cerrar la compuerta
     #etapa = 2 el mosquito paso todo para cerrar la compuerta y proceder a la clasificacion
-    while not hasRun:
+    try:
+        
+        while not hasRun:
         to0grados()
         compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
         detectado = deteccionMosquito()
@@ -337,7 +339,11 @@ if __name__ == '__main__':
                 compuertaPosicion = 0
 
         # hasRun=True
-    print("Stop motor")
-    # GPIO.output(succionFan, GPIO.LOW)
-    for pin in StepPins:
-        GPIO.output(pin, False)
+        print("Stop motor")
+        # GPIO.output(succionFan, GPIO.LOW)
+        for pin in StepPins:
+            GPIO.output(pin, False)
+    except KeyboardInterrupt:
+        c.stop()
+        GPIO.cleanup()
+        print("Cleanup gpio")

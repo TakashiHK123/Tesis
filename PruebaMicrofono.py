@@ -118,7 +118,7 @@ def detectar_frecuencia_usb(capturador):
                 # Actualizar el gráfico
                 plt.pause(0.001)  # Añadi un pequeño retraso para permitir la actualización de la interfaz gráfica
                 frecuencia_dominante = frecuencias[indice_frecuencia_dominante]
-                if frecuencia_dominante != 0 and frecuencia_dominante >=300 and rms_level_db > umbral_db:
+                if frecuencia_dominante != 0 and frecuencia_dominante >=300 and rms_level_db > umbral_db and frecuencia_dominante <=1000:
                     print(f'Decibelios:{rms_level_db}')
                     print(f'Frecuencia: {frecuencia_dominante} Hz')
                     time.sleep(0.01)

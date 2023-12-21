@@ -55,13 +55,13 @@ def to90grados():
     for angle in range(0,100,100):
         duty_cycle = 2.5 + (angle/18.0)
         p.ChangeDutyCycle(duty_cycle)
-        time.sleep(0.5)
+        time.sleep(1)
         
 def to0grados():
     for angle in range(110,-1,-110):
         duty_cycle = 2.5 +(angle/18.0)
         p.ChangeDutyCycle(duty_cycle)
-        time.sleep(0.5)
+        time.sleep(1)
         
 def steps(nb):
         StepCounter = 0
@@ -117,16 +117,18 @@ if __name__ == '__main__' :
     while not hasRun:
             #steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
             
-            posicionExpulsion(siguiente*compuerta)
+            #posicionExpulsion(siguiente*compuerta)
             #GPIO.output(succionFan, GPIO.LOW)
             #GPIO.output(empujeFan, GPIO.HIGH)
             to0grados()
-            time.sleep(5)
+            print("succion")
+            time.sleep(2)
             #steps(-grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens anti-horaire
-            retorno(siguiente*compuerta)
+            #retorno(siguiente*compuerta)
             #GPIO.output(empujeFan, GPIO.LOW)
             #GPIO.output(succionFan, GPIO.HIGH)
             to90grados()
+            print("EMPUJE")
             time.sleep(5)
             #hasRun=True
     print("Stop motor")
