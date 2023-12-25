@@ -1,0 +1,10 @@
+Configuraciones de los pines utilizados para cada actuador o sensor:
+
+- Actuadores
+    servoCompuertaPIN = 6
+    servoSelectorPIN = 13
+    StepPins = [17,18,27,22] Motor paso a paso
+
+- Sensores Inflarrojos
+    Sensor inflarrojo compuerta pin_sensor = 5
+    Sensor Inflarrojo selector pin_sensor_selector = 26
