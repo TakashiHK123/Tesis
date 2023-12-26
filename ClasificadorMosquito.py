@@ -306,10 +306,7 @@ if __name__ == '__main__':
     # GPIO.output(empujeFan, GPIO.LOW)
     time.sleep(5)
     mic_configurado = configurar_mic()
-    #Se configura las etapa
-    #etapa = 0 no se detecta aun mosquito
-    #etapa = 1 se detecto el mosquito y a pasado al seleccionador para cerrar la compuerta
-    #etapa = 2 el mosquito paso todo para cerrar la compuerta y proceder a la clasificacion
+
     try:
         while not hasRun:
             to0grados()
