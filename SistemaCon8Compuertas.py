@@ -62,7 +62,8 @@ def to0grados():
         duty_cycle = 2.5 +(angle/18.0)
         p.ChangeDutyCycle(duty_cycle)
         time.sleep(0.5)
-        
+
+
 def steps(nb):
         StepCounter = 0
         if nb<0: sign=-1
@@ -118,14 +119,10 @@ if __name__ == '__main__' :
             #steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
             
             posicionExpulsion(siguiente*compuerta)
-            #GPIO.output(succionFan, GPIO.LOW)
-            #GPIO.output(empujeFan, GPIO.HIGH)
             to0grados()
             time.sleep(5)
             #steps(-grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens anti-horaire
             retorno(siguiente*compuerta)
-            #GPIO.output(empujeFan, GPIO.LOW)
-            #GPIO.output(succionFan, GPIO.HIGH)
             to90grados()
             time.sleep(5)
             #hasRun=True
