@@ -15,18 +15,17 @@ c.start(2.5)
 p = GPIO.PWM(servoSelectorPIN,50)
 p.start(2.5)
 
-def compuertaCerrado():
+def compuertaAbierta():
     for angleY in range(0,60,5):
         duty_cycley = 2.5 + (angleY/18.0)
         c.ChangeDutyCycle(duty_cycley)
-    print("Cerrado")
+    print("Abierta")
     
-def compuetaAbierta():
+def compuertaCerrado():
     for angleA in range(60,-1,-5):
         duty_cycleA = 2.5 +(angleA/18.0)
         c.ChangeDutyCycle(duty_cycleA)#Cuando esta abierto
-        time.sleep(0.5)
-    print("Abierto")
+    print("Cerrado")
 
 def calibrar():
     for angleA in range(61,-1,-5):
@@ -58,9 +57,9 @@ try:
     #GPIO.cleanup()
     #to0grados()
     #to90grados()
-    compuertaCerrado()
+    #compuertaCerrado()
     #time.sleep(2)
-    #compuetaAbierta()
+    compuertaAbierta()
     #calibrar()
     #time.sleep(5)
       
