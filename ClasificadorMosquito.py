@@ -311,41 +311,40 @@ if __name__ == '__main__':
     #etapa = 1 se detecto el mosquito y a pasado al seleccionador para cerrar la compuerta
     #etapa = 2 el mosquito paso todo para cerrar la compuerta y proceder a la clasificacion
     try:
-        
         while not hasRun:
-        to0grados()
-        compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
-        detectado = deteccionMosquito()
-        if detectado==True:
-            compuertaCerrado()
-            print("Para el succionador")
-            time.sleep(5)
-            print('Se procede a la clasificacion del mosquito')
-            # Configurar el microfono fuera de la funcion
-            # Ejecutar el detector de frecuencia con la configuracion del microfono
-            frecuencia = detectar_frecuencia_usb(mic_configurado)
-            compuertaPosicion = 0
-
-            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 1)
-            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 2)
-
-            if compuertaPosicion != 0:
-                posicionExpulsion(siguiente * compuertaPosicion)
-                to90grados()
-                print("se enciende succionador para el empuje")
-                #Falta programar una salida para on/off del turbina vacum.
-                #Tambien conectar el segundo sensor inflarrojo
-
+            to0grados()
+            compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
+            detectado = deteccionMosquito()
+            if detectado==True:
+                compuertaCerrado()
+                print("Para el succionador")
                 time.sleep(5)
-                retorno(siguiente * compuertaPosicion)
+                print('Se procede a la clasificacion del mosquito')
+                # Configurar el microfono fuera de la funcion
+                # Ejecutar el detector de frecuencia con la configuracion del microfono
+                frecuencia = detectar_frecuencia_usb(mic_configurado)
                 compuertaPosicion = 0
 
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 1)
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 2)
+
+                if compuertaPosicion != 0:
+                    posicionExpulsion(siguiente * compuertaPosicion)
+                    to90grados()
+                    print("se enciende succionador para el empuje")
+                    #Falta programar una salida para on/off del turbina vacum.
+                    #Tambien conectar el segundo sensor inflarrojo
+
+                    time.sleep(5)
+                    retorno(siguiente * compuertaPosicion)
+                    compuertaPosicion = 0
+
+    except KeyboardInterrupt:
+        c.stop()
+        GPIO.cleanup()
+        print("Cleanup gpio")
         # hasRun=True
         print("Stop motor")
         # GPIO.output(succionFan, GPIO.LOW)
         for pin in StepPins:
             GPIO.output(pin, False)
-    except KeyboardInterrupt:
-        c.stop()
-        GPIO.cleanup()
-        print("Cleanup gpio")
