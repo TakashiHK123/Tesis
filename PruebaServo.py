@@ -1,6 +1,8 @@
 import RPi.GPIO as GPIO
 import time
 
+
+
 servoCompuertaPIN = 6
 servoSelectorPIN = 13
 GPIO.cleanup()
@@ -14,29 +16,51 @@ p = GPIO.PWM(servoSelectorPIN,50)
 p.start(2.5)
 
 def compuertaCerrado():
-    for angleY in range(0,60,60):
+    for angleY in range(0,60,5):
         duty_cycley = 2.5 + (angleY/18.0)
         c.ChangeDutyCycle(duty_cycley)
         time.sleep(0.5)
     print("Cerrado")
     
 def compuetaAbierta():
-    for angleA in range(60,-1,-60):
+    for angleA in range(60,-1,-5):
         duty_cycleA = 2.5 +(angleA/18.0)
         c.ChangeDutyCycle(duty_cycleA)#Cuando esta abierto
         time.sleep(0.5)
     print("Abierto")
 
 def calibrar():
-    for angleA in range(60,-1,-60):
+    for angleA in range(61,-1,-5):
         duty_cycleA = 2.5 +(angleA/18.0)
         c.ChangeDutyCycle(duty_cycleA)#Cuando esta abierto
         time.sleep(0.5)
     print("Abierto")
+    
+def to90grados():
+    for angle9 in range(0, 95, 5):
+        duty_cycle9 = 2.5 + (angle9 / 18.0)
+        p.ChangeDutyCycle(duty_cycle9)
+        
+        #time.sleep(0.5)
+    print("Expulsar")
+
+
+def to0grados():
+    for angle0 in range(100, -1, -5):
+        duty_cycle0 = 2.5 + (angle0 / 18.0)
+        p.ChangeDutyCycle(duty_cycle0)
+        
+        #time.sleep(0.5)
+    print("Succionar")
 
 try:
+    #c.stop()
+    #p.stop()
+    #GPIO.cleanup()
+    to0grados()
+    #to90grados()
     #compuertaCerrado()
-    #time.sleep(2)
+    time.sleep(2)
     #compuetaAbierta()
     #calibrar()
     #time.sleep(5)
