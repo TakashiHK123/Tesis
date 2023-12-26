@@ -117,17 +117,17 @@ if __name__ == '__main__' :
     while not hasRun:
             #steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
             
-            #posicionExpulsion(siguiente*compuerta)
+            posicionExpulsion(siguiente*1)
             #GPIO.output(succionFan, GPIO.LOW)
             #GPIO.output(empujeFan, GPIO.HIGH)
-            to0grados()
+            #to0grados()
             print("succion")
             time.sleep(2)
             #steps(-grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens anti-horaire
-            #retorno(siguiente*compuerta)
+            retorno(siguiente*1)
             #GPIO.output(empujeFan, GPIO.LOW)
             #GPIO.output(succionFan, GPIO.HIGH)
-            to90grados()
+            #to90grados()
             print("EMPUJE")
             time.sleep(5)
             #hasRun=True
