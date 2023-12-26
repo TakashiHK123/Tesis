@@ -37,7 +37,7 @@ def calibrar():
     print("Abierto")
     
 def to90grados():
-    for angle9 in range(0, 95, 5):
+    for angle9 in range(0, 91, 5):
         duty_cycle9 = 2.5 + (angle9 / 18.0)
         p.ChangeDutyCycle(duty_cycle9)
         
