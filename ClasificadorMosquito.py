@@ -293,6 +293,11 @@ def detectar_frecuencia_usb(capturador):
                     return frecuencia_dominante
     except KeyboardInterrupt:
         pass
+def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta):
+    if frecuencia >= minimo and frecuencia <= maximo:
+        print(f'Se a detectado un mosquito entre los rangos de frecuencia:{minimo} - {maximo}')
+        # steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
+        return compuerta
 
 if __name__ == '__main__':
     hasRun = False
@@ -320,17 +325,17 @@ if __name__ == '__main__':
             # Ejecutar el detector de frecuencia con la configuracion del microfono
             frecuencia = detectar_frecuencia_usb(mic_configurado)
             compuertaPosicion = 0
-            if frecuencia >= 500 and frecuencia <=630:
-                print('se a detectado un mosquito entre los rango 500 y 630')
-                # steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
-                compuertaPosicion=1 #seria la compuerta correspondiente a cierto mosquito
-            if frecuencia >= 630 and frecuencia <=800:
-                compuertaPosicion = 2
+
+            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 1)
+            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 2)
 
             if compuertaPosicion != 0:
                 posicionExpulsion(siguiente * compuertaPosicion)
                 to90grados()
                 print("se enciende succionador para el empuje")
+                #Falta programar una salida para on/off del turbina vacum.
+                #Tambien conectar el segundo sensor inflarrojo
+
                 time.sleep(5)
                 retorno(siguiente * compuertaPosicion)
                 compuertaPosicion = 0
