@@ -84,29 +84,31 @@ StepCount = StepCount2
 
 
 def to90grados():
-    for angle9 in range(0, 100, 100):
+    for angle9 in range(0, 91, 5):
         duty_cycle9 = 2.5 + (angle9 / 18.0)
         p.ChangeDutyCycle(duty_cycle9)
-        time.sleep(0.5)
+    print("Valvula Expulsar")
 
 
 def to0grados():
-    for angle0 in range(110, -1, -110):
+    for angle0 in range(100, -1, -5):
         duty_cycle0 = 2.5 + (angle0 / 18.0)
         p.ChangeDutyCycle(duty_cycle0)
-        time.sleep(0.5)
+    print("Valvula Succionar")
+
 
 def compuertaAbierta():
-    for angleA in range(60,-1,-60):
-        duty_cycleA = 2.5 +(angleA/18.0)
-        c.ChangeDutyCycle(duty_cycleA)#Cuando esta abierto
-        time.sleep(0.5)
+    for angleY in range(0, 61, 5):
+        duty_cycley = 2.5 + (angleY / 18.0)
+        c.ChangeDutyCycle(duty_cycley)
+    print("Abierta")
 
-def compuertaCerrada():
-    for angleY in range(0,60,60):
-        duty_cycleY = 2.5 + (angleY/18.0)
-        c.ChangeDutyCycle(duty_cycleY)
-        time.sleep(0.5)
+
+def compuertaCerrado():
+    for angleA in range(60, -1, -5):
+        duty_cycleA = 2.5 + (angleA / 18.0)
+        c.ChangeDutyCycle(duty_cycleA)  # Cuando esta abierto
+    print("Cerrado")
 
 def steps(nb):
     StepCounter = 0
@@ -310,7 +312,7 @@ if __name__ == '__main__':
         compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
         detectado = deteccionMosquito()
         if detectado==True:
-            compuertaCerrada()
+            compuertaCerrado()
             print("Para el succionador")
             time.sleep(5)
             print('Se procede a la clasificacion del mosquito')
