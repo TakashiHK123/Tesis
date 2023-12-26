@@ -19,7 +19,6 @@ def compuertaCerrado():
     for angleY in range(0,60,5):
         duty_cycley = 2.5 + (angleY/18.0)
         c.ChangeDutyCycle(duty_cycley)
-        time.sleep(0.5)
     print("Cerrado")
     
 def compuetaAbierta():
@@ -57,10 +56,10 @@ try:
     #c.stop()
     #p.stop()
     #GPIO.cleanup()
-    to0grados()
+    #to0grados()
     #to90grados()
-    #compuertaCerrado()
-    time.sleep(2)
+    compuertaCerrado()
+    #time.sleep(2)
     #compuetaAbierta()
     #calibrar()
     #time.sleep(5)
