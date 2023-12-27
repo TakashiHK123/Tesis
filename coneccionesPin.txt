@@ -8,3 +8,6 @@ Configuraciones de los pines utilizados para cada actuador o sensor:
 - Sensores Inflarrojos
     Sensor inflarrojo compuerta pin_sensor = 5
     Sensor Inflarrojo selector pin_sensor_selector = 26
+
+- Activador Soplador Relay
+    pin = Gpio 16

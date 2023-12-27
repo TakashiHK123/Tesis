@@ -33,6 +33,7 @@ StepPins = [17, 18, 27, 22]
 
 # Definir fan de succion y de empuje
 servoPIN = 13
+pinSuccionador = 16
 # succionFan = 6
 # empujeFan = 5
 # GPIO.setmode(GPIO.BOARD)
@@ -49,9 +50,10 @@ c.start(2.5)
 # --------------------------------------------------
 # Define el número del pin GPIO que deseas usar
 pin_sensor = 5
-# Configura el pin como entrada
+# Configura el pin como entrada sensor
 GPIO.setup(pin_sensor, GPIO.IN)
-
+# Configura el pin para salida digital on/off para el succionador controlador por el relay
+GPIO.setup(pinSuccionador, GPIO.OUT)
 for pin in StepPins:
     print("Setup pins")
     GPIO.setup(pin, GPIO.OUT)
@@ -161,9 +163,9 @@ def posicionExpulsion(grados):
         steps(-grados_a_pasos(grados))
     else:
         steps(grados_a_pasos(grados))
+    print('Seleccionador en posicion')
 
-
-def deteccionMosquito(detected):
+def deteccionMosquito():
     estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
     while True:
         # Lee el valor del pin GPIO
@@ -302,39 +304,40 @@ def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta):
 if __name__ == '__main__':
     hasRun = False
     # GPIO.output(succionFan, GPIO.HIGH)
-    to90grados()
+    to0grados()
     # GPIO.output(empujeFan, GPIO.LOW)
     time.sleep(5)
     mic_configurado = configurar_mic()
-
+    GPIO.output(pinSuccionador, GPIO.HIGH)
     try:
         while not hasRun:
             to0grados()
             compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
-            detectado = deteccionMosquito()
-            if detectado==True:
-                compuertaCerrado()
-                print("Para el succionador")
+            GPIO.output(pinSuccionador, GPIO.HIGH)
+            deteccionMosquito() #No pasa de esta linea hasta que entre un mosquito
+            #Se a detectado un mosquito se procede a cerrar las compuertas.
+            compuertaCerrado()
+            posicionExpulsion(siguiente * 1)
+            print("Para el succionador")
+            GPIO.output(pinSuccionador, GPIO.LOW)
+            print('Se procede a la clasificacion del mosquito')
+            # Configurar el microfono fuera de la funcion
+            # Ejecutar el detector de frecuencia con la configuracion del microfono
+            frecuencia = detectar_frecuencia_usb(mic_configurado)
+            compuertaPosicion = 0
+
+            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 2)
+            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 3)
+
+            if compuertaPosicion != 0:
+                posicionExpulsion(siguiente * compuertaPosicion)
+                to90grados()
+                print("se enciende succionador para el empuje")
+                #Falta programar una salida para on/off del turbina vacum.
+                #Tambien conectar el segundo sensor inflarrojo
                 time.sleep(5)
-                print('Se procede a la clasificacion del mosquito')
-                # Configurar el microfono fuera de la funcion
-                # Ejecutar el detector de frecuencia con la configuracion del microfono
-                frecuencia = detectar_frecuencia_usb(mic_configurado)
+                retorno(siguiente * compuertaPosicion)
                 compuertaPosicion = 0
-
-                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 1)
-                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 2)
-
-                if compuertaPosicion != 0:
-                    posicionExpulsion(siguiente * compuertaPosicion)
-                    to90grados()
-                    print("se enciende succionador para el empuje")
-                    #Falta programar una salida para on/off del turbina vacum.
-                    #Tambien conectar el segundo sensor inflarrojo
-
-                    time.sleep(5)
-                    retorno(siguiente * compuertaPosicion)
-                    compuertaPosicion = 0
 
     except KeyboardInterrupt:
         c.stop()
