@@ -333,7 +333,7 @@ if __name__ == '__main__':
                 posicionExpulsion(siguiente * compuertaPosicion)
                 to90grados()
                 print("se enciende succionador para el empuje")
-                #Falta programar una salida para on/off del turbina vacum.
+                GPIO.output(pinSuccionador, GPIO.HIGH)
                 #Tambien conectar el segundo sensor inflarrojo
                 time.sleep(5)
                 retorno(siguiente * compuertaPosicion)
