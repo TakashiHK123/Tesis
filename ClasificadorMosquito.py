@@ -337,7 +337,7 @@ if __name__ == '__main__':
                     time.sleep(5)
                     retorno(siguiente * compuertaPosicion)
                     compuertaPosicion = 0
-                    break
+                    estadoDeteccion=True
 
     except KeyboardInterrupt:
         c.stop()
