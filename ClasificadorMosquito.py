@@ -322,20 +322,22 @@ if __name__ == '__main__':
             print('Se procede a la clasificacion del mosquito')
             # Configurar el microfono fuera de la funcion
             # Ejecutar el detector de frecuencia con la configuracion del microfono
-            frecuencia = detectar_frecuencia_usb(mic_configurado)
-            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 2)
-            compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 3)
-
-            if compuertaPosicion != 0:
-                print(f'El valor de compuertaPosicion:{compuertaPosicion} y siguiente: {siguiente}')
-                posicionExpulsion(siguiente * compuertaPosicion)
-                to90grados()
-                print("se enciende succionador para el empuje")
-                GPIO.output(pinSuccionador, GPIO.LOW)
-                #Tambien conectar el segundo sensor inflarrojo
-                time.sleep(5)
-                retorno(siguiente * compuertaPosicion)
-                compuertaPosicion = 0
+            estadoDeteccion=False
+            while not estadoDeteccion:
+                frecuencia = detectar_frecuencia_usb(mic_configurado)
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 2)
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 3)
+                if compuertaPosicion != 0:
+                    estadoDeteccion=True
+                    print(f'El valor de compuertaPosicion:{compuertaPosicion} y siguiente: {siguiente}')
+                    posicionExpulsion(siguiente * compuertaPosicion)
+                    to90grados()
+                    print("se enciende succionador para el empuje")
+                    GPIO.output(pinSuccionador, GPIO.LOW)
+                    #Tambien conectar el segundo sensor inflarrojo
+                    time.sleep(5)
+                    retorno(siguiente * compuertaPosicion)
+                    compuertaPosicion = 0
 
     except KeyboardInterrupt:
         c.stop()
