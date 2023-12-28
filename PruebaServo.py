@@ -25,9 +25,6 @@ def compuertaCerrado():
     for angleA in range(60,-1,-5):
         duty_cycleA = 2.5 +(angleA/18.0)
         c.ChangeDutyCycle(duty_cycleA)#Cuando esta abierto
-        #Reducir el consumo de energia
-        c.ChangeDutyCycle(0)
-        time.sleep(0.05)
     print("Cerrado")
 
 def calibrar():
@@ -57,12 +54,12 @@ try:
     #c.stop()
     #p.stop()
     #GPIO.cleanup()
-    to0grados()
-    time.sleep(2)
-    to90grados()
-    #compuertaCerrado()
+    #to0grados()
     #time.sleep(2)
-    #compuertaAbierta()
+    #to90grados()
+    compuertaCerrado()
+    time.sleep(2)
+    compuertaAbierta()
     #calibrar()
     #time.sleep(5)
       
