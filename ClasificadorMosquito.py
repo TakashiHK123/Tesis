@@ -294,12 +294,12 @@ def detectar_frecuencia_usb(capturador):
                     return frecuencia_dominante
     except KeyboardInterrupt:
         pass
-def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta):
+def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta,detectado):
     if frecuencia >= minimo and frecuencia <= maximo:
         print(f'Se a detectado un mosquito entre los rangos de frecuencia:{minimo} - {maximo} para compuerta:{compuerta}')
         # steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
         return compuerta
-    return 0
+    return detectado
 if __name__ == '__main__':
     hasRun = False
     # GPIO.output(succionFan, GPIO.HIGH)
@@ -322,6 +322,7 @@ if __name__ == '__main__':
             print('Se procede a la clasificacion del mosquito')
             # Configurar el microfono fuera de la funcion
             # Ejecutar el detector de frecuencia con la configuracion del microfono
+            compuertaPosicion=0
             estadoDeteccion=False
             while not estadoDeteccion:
                 frecuencia = detectar_frecuencia_usb(mic_configurado)
