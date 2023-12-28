@@ -141,7 +141,6 @@ def steps(nb):
 # Start main loop
 nbStepsPerRev = 2048
 siguiente = 45
-compuerta = 1  # Compuerta al que quiero que vaya y vuelva, son 8 compuertas en totales 7 posibles.
 
 
 def grados_a_pasos(grados):
@@ -158,10 +157,10 @@ def retorno(grados):
 
 
 def posicionExpulsion(grados):
-    if (grados > 180):
+    if (grados > 180 and grados!=0):
         grados = 360 - grados
         steps(-grados_a_pasos(grados))
-    else:
+    elif(grados!=0):
         steps(grados_a_pasos(grados))
     print('Seleccionador en posicion')
 
@@ -330,6 +329,7 @@ if __name__ == '__main__':
             compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 3)
 
             if compuertaPosicion != 0:
+                print(f'El valor de compuertaPosicion:{compuertaPosicion} y siguiente: {siguiente}')
                 posicionExpulsion(siguiente * compuertaPosicion)
                 to90grados()
                 print("se enciende succionador para el empuje")
