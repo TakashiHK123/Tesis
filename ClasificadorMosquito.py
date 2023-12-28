@@ -310,6 +310,7 @@ if __name__ == '__main__':
     GPIO.output(pinSuccionador, GPIO.LOW)
     try:
         while not hasRun:
+            print('-------Inicio Ciclo')
             to0grados()
             compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
             GPIO.output(pinSuccionador, GPIO.LOW)
