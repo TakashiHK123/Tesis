@@ -308,18 +308,18 @@ if __name__ == '__main__':
     # GPIO.output(empujeFan, GPIO.LOW)
     time.sleep(5)
     mic_configurado = configurar_mic()
-    GPIO.output(pinSuccionador, GPIO.HIGH)
+    GPIO.output(pinSuccionador, GPIO.LOW)
     try:
         while not hasRun:
             to0grados()
             compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
-            GPIO.output(pinSuccionador, GPIO.HIGH)
+            GPIO.output(pinSuccionador, GPIO.LOW)
             deteccionMosquito() #No pasa de esta linea hasta que entre un mosquito
             #Se a detectado un mosquito se procede a cerrar las compuertas.
             compuertaCerrado()
             posicionExpulsion(siguiente * 1)
             print("Para el succionador")
-            GPIO.output(pinSuccionador, GPIO.LOW)
+            GPIO.output(pinSuccionador, GPIO.HIGH)
             print('Se procede a la clasificacion del mosquito')
             # Configurar el microfono fuera de la funcion
             # Ejecutar el detector de frecuencia con la configuracion del microfono
@@ -333,7 +333,7 @@ if __name__ == '__main__':
                 posicionExpulsion(siguiente * compuertaPosicion)
                 to90grados()
                 print("se enciende succionador para el empuje")
-                GPIO.output(pinSuccionador, GPIO.HIGH)
+                GPIO.output(pinSuccionador, GPIO.LOW)
                 #Tambien conectar el segundo sensor inflarrojo
                 time.sleep(5)
                 retorno(siguiente * compuertaPosicion)
