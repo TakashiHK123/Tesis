@@ -296,7 +296,7 @@ def detectar_frecuencia_usb(capturador):
         pass
 def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta):
     if frecuencia >= minimo and frecuencia <= maximo:
-        print(f'Se a detectado un mosquito entre los rangos de frecuencia:{minimo} - {maximo}')
+        print(f'Se a detectado un mosquito entre los rangos de frecuencia:{minimo} - {maximo} para compuerta:{compuerta}')
         # steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
         return compuerta
     return 0
@@ -327,6 +327,7 @@ if __name__ == '__main__':
                 frecuencia = detectar_frecuencia_usb(mic_configurado)
                 compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 2)
                 compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 3)
+                print(f'Compuerta:{compuertaPosicion}')
                 if compuertaPosicion != 0:
                     print(f'El valor de compuertaPosicion:{compuertaPosicion} y siguiente: {siguiente}')
                     posicionExpulsion(siguiente * compuertaPosicion)
