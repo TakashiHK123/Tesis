@@ -11,15 +11,15 @@ import matplotlib.pyplot as plt
 
 GPIO.cleanup()
 # Inicializar el gráfico
-plt.ion()  # Habilitar modo interactivo
-fig, ax = plt.subplots()
-line, = ax.plot([], [])
-ax.set_title('FFT en tiempo real')
-ax.set_xlabel('Frecuencia (Hz)')
-ax.set_ylabel('Amplitud')
+#plt.ion()  # Habilitar modo interactivo
+#fig, ax = plt.subplots()
+#line, = ax.plot([], [])
+#ax.set_title('FFT en tiempo real')
+#ax.set_xlabel('Frecuencia (Hz)')
+#ax.set_ylabel('Amplitud')
 #frecuencias = np.fft.fftfreq(512, 1 / 44100)  # Ajustar según el tamaño del periodo
-ax.set_xlim(0,  6000)  # Ajustar según la frecuencia de muestreo
-ax.set_ylim(-1800000, 1800000)
+#ax.set_xlim(0,  6000)  # Ajustar según la frecuencia de muestreo
+#ax.set_ylim(-1800000, 1800000)
 longitud_senal = 1024 #Tamanho del bufer de lectura
 frecuencia_muestreo = 44100 # Establecer la frecuencia de muestreo a 42.667 kHz
 
@@ -251,10 +251,10 @@ def detectar_frecuencia_usb(capturador):
     # Aplicar la Transformada Rapida de Fourier (FFT)
 
     umbral_db = -50
-    plt.show(block=False)
-    frecuencias = np.fft.fftfreq(longitud_senal, 1 / frecuencia_muestreo)
-    amplitudes_iniciales = np.zeros(longitud_senal)
-    line, = ax.plot(frecuencias, amplitudes_iniciales)
+    #plt.show(block=False)
+    #frecuencias = np.fft.fftfreq(longitud_senal, 1 / frecuencia_muestreo)
+    #amplitudes_iniciales = np.zeros(longitud_senal)
+    #line, = ax.plot(frecuencias, amplitudes_iniciales)
     detected = True
     try:
         while detected:
@@ -280,12 +280,12 @@ def detectar_frecuencia_usb(capturador):
 
                 # Obtener la frecuencia dominante en Hz
                 # Actualizar la línea en el gráfico
-                line.set_xdata(np.abs(frecuencias))
-                line.set_ydata(fft_resultado)
+                #line.set_xdata(np.abs(frecuencias))
+                #line.set_ydata(fft_resultado)
                 # print(np.abs(fft_resultado))
-                plt.draw()
+                #plt.draw()
                 # Actualizar el gráfico
-                plt.pause(0.001)  # Añadi un pequeño retraso para permitir la actualización de la interfaz gráfica
+                #plt.pause(0.001)  # Añadi un pequeño retraso para permitir la actualización de la interfaz gráfica
                 frecuencia_dominante = frecuencias[indice_frecuencia_dominante]
                 if frecuencia_dominante != 0 and frecuencia_dominante >= 300 and rms_level_db > umbral_db:
                     print(f'Decibelios:{rms_level_db}')
