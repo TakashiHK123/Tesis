@@ -173,15 +173,15 @@ def deteccionMosquito():
         if value == GPIO.HIGH:
             print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
             estado = 1
-            print(f'Estado:{estado}')
+            #print(f'Estado:{estado}')
             # Realiza acciones específicas para objetos blancos
         else:
-            print(f'Estado:{estado}')
+            #print(f'Estado:{estado}')
             if estado == 1:
-                print('El mosquito a ingresado, proceder a cerrar la compuerta')
+                #print('El mosquito a ingresado, proceder a cerrar la compuerta')
                 estado = 0
                 break
-            print(value)
+            #print(value)
 
             # Realiza acciones específicas para objetos negros
 
