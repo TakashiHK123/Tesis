@@ -328,7 +328,6 @@ if __name__ == '__main__':
                 compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 2)
                 compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 3)
                 if compuertaPosicion != 0:
-                    estadoDeteccion=True
                     print(f'El valor de compuertaPosicion:{compuertaPosicion} y siguiente: {siguiente}')
                     posicionExpulsion(siguiente * compuertaPosicion)
                     to90grados()
@@ -338,6 +337,7 @@ if __name__ == '__main__':
                     time.sleep(5)
                     retorno(siguiente * compuertaPosicion)
                     compuertaPosicion = 0
+                    break
 
     except KeyboardInterrupt:
         c.stop()
