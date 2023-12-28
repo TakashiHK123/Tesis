@@ -34,6 +34,7 @@ StepPins = [17, 18, 27, 22]
 # Definir fan de succion y de empuje
 servoPIN = 13
 pinSuccionador = 16
+pin_sensor_selector = 26
 # succionFan = 6
 # empujeFan = 5
 # GPIO.setmode(GPIO.BOARD)
@@ -52,6 +53,7 @@ c.start(2.5)
 pin_sensor = 5
 # Configura el pin como entrada sensor
 GPIO.setup(pin_sensor, GPIO.IN)
+GPIO.setup(pin_sensor_selector, GPIO.IN)
 # Configura el pin para salida digital on/off para el succionador controlador por el relay
 GPIO.setup(pinSuccionador, GPIO.OUT)
 for pin in StepPins:
@@ -183,6 +185,21 @@ def deteccionMosquito():
                 break
             #print(value)
 
+            # Realiza acciones específicas para objetos negros
+
+def deteccionMosquitoDentroDeLaCapsula():
+    estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
+    while True:
+        # Lee el valor del pin GPIO
+        value = GPIO.input(pin_sensor_selector)
+
+        if value == GPIO.HIGH:
+            estado = 1
+        else:
+            if estado == 1:
+                print('Mosquito ingresado dentro de la capsula')
+                estado = 0
+                break
             # Realiza acciones específicas para objetos negros
 
 def es_dispositivo_usb(dispositivo):
@@ -317,7 +334,9 @@ if __name__ == '__main__':
             deteccionMosquito() #No pasa de esta linea hasta que entre un mosquito
             #Se a detectado un mosquito se procede a cerrar las compuertas.
             compuertaCerrado()
-            posicionExpulsion(siguiente * 1)
+            #Se espera detectar dentro de la capsula
+            deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
+            posicionExpulsion(siguiente * 1)#Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
             print("Para el succionador")
             GPIO.output(pinSuccionador, GPIO.HIGH)
             print('Se procede a la clasificacion del mosquito')
@@ -335,7 +354,6 @@ if __name__ == '__main__':
                     to90grados()
                     print("se enciende succionador para el empuje")
                     GPIO.output(pinSuccionador, GPIO.LOW)
-                    #Tambien conectar el segundo sensor inflarrojo
                     time.sleep(5)
                     retorno(siguiente * compuertaPosicion)
                     compuertaPosicion = 0
