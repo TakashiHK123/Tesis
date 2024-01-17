@@ -10,12 +10,12 @@ pin_sensor = 5
 # Configura el pin como entrada
 GPIO.setup(pin_sensor, GPIO.IN)
 
-def deteccionMosquito(detected):
+def deteccionMosquito():
     estado = 0 #estados 0 aun no se detecto el mosquito, 1 se a detectado
     while True:
         # Lee el valor del pin GPIO
         value = GPIO.input(pin_sensor)
-        
+        print(f'Value={value}')
         if value == GPIO.HIGH:
             print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
             estado = 1
@@ -34,6 +34,6 @@ def deteccionMosquito(detected):
         # Espera un tiempo antes de la siguiente lectura
         time.sleep(0.01)
 
-detected = deteccionMosquito(False)
+detected = deteccionMosquito()
 print(detected)
 print('Se a detectado y a pasado')

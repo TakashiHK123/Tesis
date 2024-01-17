@@ -173,7 +173,7 @@ def deteccionMosquito():
         value = GPIO.input(pin_sensor)
 
         if value == GPIO.HIGH:
-            print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
+            #print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
             estado = 1
             #print(f'Estado:{estado}')
             # Realiza acciones específicas para objetos blancos
@@ -181,6 +181,7 @@ def deteccionMosquito():
             #print(f'Estado:{estado}')
             if estado == 1:
                 #print('El mosquito a ingresado, proceder a cerrar la compuerta')
+                print('Se procede a la deteccion del mosquito')
                 estado = 0
                 break
             #print(value)
@@ -329,13 +330,13 @@ if __name__ == '__main__':
         while not hasRun:
             print('-------Inicio Ciclo')
             to0grados()
-            compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
+            #compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
             GPIO.output(pinSuccionador, GPIO.LOW)
             deteccionMosquito() #No pasa de esta linea hasta que entre un mosquito
             #Se a detectado un mosquito se procede a cerrar las compuertas.
-            compuertaCerrado()
+            #compuertaCerrado()
             #Se espera detectar dentro de la capsula
-            deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
+            #deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
             posicionExpulsion(siguiente * 1)#Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
             print("Para el succionador")
             GPIO.output(pinSuccionador, GPIO.HIGH)
