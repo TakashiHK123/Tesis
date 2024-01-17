@@ -17,7 +17,7 @@ sd.wait()
 # Mostrar información sobre los dispositivos de entrada disponibles
 print(sd.query_devices())
 
-# Seleccionar el micrófono por su identificador de dispositivo
+# Seleccionar el micrófono por su identificador de dispositivo##Lo mas probable que se use esto
 #mic_id = 0  # Ajusta el valor según la salida de sd.query_devices()
 #audio = sd.rec(frames=44100, channels=1, samplerate=44100, dtype='int16', device=mic_id)
 #sd.wait()
