@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pywt
 import sounddevice as sd
+from scipy.io import wavfile
 
 # Configuración de grabación
 fs = 44100  # Frecuencia de muestreo
@@ -9,7 +10,9 @@ duration = 5  # Duración de la grabación en segundos
 
 # Grabar audio desde el micrófono USB
 print("Grabando...")
-audio = sd.rec(int(fs * duration), samplerate=fs, channels=1, dtype=np.int16)
+#audio = sd.rec(int(fs * duration), samplerate=fs, channels=1, dtype=np.int16)
+mic_id = 2  # Ajusta el valor según la salida de sd.query_devices()
+audio = sd.rec(frames=44100, channels=1, samplerate=44100, dtype='int16', device=mic_id)
 sd.wait()
 #---Otro ejejmplo a probar
 #import sounddevice as sd
