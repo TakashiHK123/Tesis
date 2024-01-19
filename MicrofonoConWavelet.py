@@ -4,6 +4,21 @@ import pywt
 import sounddevice as sd
 from scipy.io import wavfile
 
+
+def calcular_frecuencia_zumbido(coeffs, fs):
+    # Aquí deberías implementar la lógica para calcular la frecuencia del zumbido del mosquito
+    # A modo de ejemplo, puedes buscar el pico dominante en los coeficientes de alta frecuencia
+
+    # Obtener los coeficientes de detalle de alta frecuencia (por ejemplo, el último nivel)
+    coeficientes_det_alta = coeffs[-1]
+
+    # Encontrar el índice del máximo valor en los coeficientes de detalle de alta frecuencia
+    indice_pico = np.argmax(np.abs(coeficientes_det_alta))
+
+    # Calcular la frecuencia correspondiente al índice del pico
+    frecuencia_zumbido = indice_pico * (fs / len(coeficientes_det_alta))
+
+    return frecuencia_zumbido
 # Configuración de grabación
 fs = 44100  # Frecuencia de muestreo
 duration = 5  # Duración de la grabación en segundos
