@@ -8,6 +8,8 @@ import alsaaudio
 import time
 import pyudev
 import matplotlib.pyplot as plt
+from scipy.fft import fft, ifft
+from scipy.io.wavfile import write
 
 GPIO.cleanup()
 # Inicializar el gráfico
@@ -304,12 +306,13 @@ def detectar_frecuencia_usb(capturador):
                 # Actualizar el gráfico
                 #plt.pause(0.001)  # Añadi un pequeño retraso para permitir la actualización de la interfaz gráfica
                 frecuencia_dominante = frecuencias[indice_frecuencia_dominante]
-                if frecuencia_dominante != 0 and frecuencia_dominante >= 300 and rms_level_db > umbral_db:
+                if frecuencia_dominante != 0 and frecuencia_dominante >= 300 and rms_level_db > umbral_db and frecuencia_dominante <= 1000:
                     print(f'Decibelios:{rms_level_db}')
                     print(f'Frecuencia: {frecuencia_dominante} Hz')
                     time.sleep(0.01)
+                    signal_reconstruida = ifft(fft_resultado)
                     detected = False
-                    return frecuencia_dominante
+                    return [frecuencia_dominante,signal_reconstruida]
     except KeyboardInterrupt:
         pass
 def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta,detectado):
@@ -346,9 +349,10 @@ if __name__ == '__main__':
             compuertaPosicion=0
             estadoDeteccion=False
             while not estadoDeteccion:
-                frecuencia = detectar_frecuencia_usb(mic_configurado)
-                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,500, 630, 2,compuertaPosicion)
-                compuertaPosicion=selectorCompuertaByRangoFrecuencia(frecuencia,630, 800, 3,compuertaPosicion)
+                resultado = detectar_frecuencia_usb(mic_configurado)
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],500, 630, 2,compuertaPosicion)
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],630, 800, 3,compuertaPosicion)
+                write(str(compuertaPosicion)+'.wav', frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
                 if compuertaPosicion != 0:
                     print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
                     posicionExpulsion(siguiente * compuertaPosicion)
