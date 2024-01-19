@@ -3,22 +3,44 @@ import matplotlib.pyplot as plt
 import pywt
 import sounddevice as sd
 from scipy.io import wavfile
+from scipy.signal import find_peaks
 
 
 def calcular_frecuencia_zumbido(coeffs, fs):
-    # Aquí deberías implementar la lógica para calcular la frecuencia del zumbido del mosquito
-    # A modo de ejemplo, puedes buscar el pico dominante en los coeficientes de alta frecuencia
-
-    # Obtener los coeficientes de detalle de alta frecuencia (por ejemplo, el último nivel)
+    # Obtener los coeficientes de detalle de alta frecuencia (último nivel)
     coeficientes_det_alta = coeffs[-1]
 
-    # Encontrar el índice del máximo valor en los coeficientes de detalle de alta frecuencia
-    indice_pico = np.argmax(np.abs(coeficientes_det_alta))
+    # Aplicar un filtro para reducir el ruido
+    coeficientes_det_alta_filtrados = aplicar_filtro(coeficientes_det_alta)
 
-    # Calcular la frecuencia correspondiente al índice del pico
-    frecuencia_zumbido = indice_pico * (fs / len(coeficientes_det_alta))
+    # Definir el rango de frecuencias de interés (200 Hz a 1000 Hz)
+    frecuencia_min = 200
+    frecuencia_max = 1000
 
-    return frecuencia_zumbido
+    # Encontrar los picos dominantes en el rango de frecuencias de interés
+    indice_pico, _ = find_peaks(np.abs(coeficientes_det_alta_filtrados), height=amplitud_minima,
+                                distance=int(fs / frecuencia_min),
+                                prominence=(None, amplitud_minima))
+
+    if len(indice_pico) > 0:
+        # Filtrar picos dentro del rango de frecuencias de interés
+        picos_en_rango = [i for i in indice_pico if frecuencia_min <= i * (fs / len(coeficientes_det_alta_filtrados)) <= frecuencia_max]
+
+        if picos_en_rango:
+            # Tomar el pico más prominente dentro del rango
+            indice_pico_final = picos_en_rango[0]
+            frecuencia_zumbido = indice_pico_final * (fs / len(coeficientes_det_alta_filtrados))
+            return frecuencia_zumbido
+
+    return None
+
+def aplicar_filtro(signal):
+    # Aquí puedes implementar algún tipo de filtro para reducir el ruido
+    # Puedes explorar filtros específicos como un filtro de media móvil o un filtro pasa bajos
+    return signal
+
+# Configuración del filtro (ajusta según sea necesario)
+amplitud_minima = 0.5
 # Configuración de grabación
 fs = 44100  # Frecuencia de muestreo
 duration = 5  # Duración de la grabación en segundos
