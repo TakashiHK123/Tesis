@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from scipy.io import wavfile
+import matplotlib.pyplot as plt
 
 # Ruta del archivo WAV dentro de la carpeta "audio"
 archivo_audio = 'audio/Mosquito:3fecha:2024-01-23_16-39-02.wav'  # Ajusta el nombre del archivo según tus necesidades
@@ -14,12 +15,17 @@ fs, audio_grabado = wavfile.read(archivo_audio)
 
 # Aplicar la Transformada de Fourier (FFT)
 fft_resultado = np.fft.fft(audio_grabado)
-frecuencias = np.fft.fftfreq(1024, 1 / fs)
+frecuencias = np.fft.fftfreq(len(fft_resultado), 1 / fs)
 
 # Encontrar la frecuencia dominante
 indice_frecuencia_dominante = np.argmax(np.abs(fft_resultado))
 frecuencia_dominante = frecuencias[indice_frecuencia_dominante]
-
+# Visualizar el espectro de frecuencia
+plt.plot(frecuencias, np.abs(fft_resultado))
+plt.xlabel('Frecuencia (Hz)')
+plt.ylabel('Amplitud')
+plt.title('Espectro de frecuencia')
+plt.show()
 # Verificar si la frecuencia corresponde a la esperada
 if frecuencia_dominante<=frecuencia_maxima_esperada and frecuencia_dominante>=frecuencia_minima_esperada:
     print(f"El audio en {archivo_audio} corresponde a la frecuencia esperada.")
