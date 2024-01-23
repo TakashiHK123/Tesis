@@ -365,7 +365,7 @@ if __name__ == '__main__':
                 # Formatear la fecha y hora como una cadena
                 formato_fecha_hora = fecha_hora_actual.strftime("%Y-%m-%d_%H-%M-%S")
                 # Generar el nombre de archivo dentro de la carpeta "audio"
-                nombre_archivo = os.path.join(carpeta_destino, 'Mosquito:'+str(compuertaPosicion)+'fecha:formato_fecha_hora'+'.wav')
+                nombre_archivo = os.path.join(carpeta_destino, 'Mosquito:'+str(compuertaPosicion)+'fecha:'+formato_fecha_hora+'.wav')
                 # Guardar la señal procesada en un archivo de audio WAV
                 write(nombre_archivo, frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
                 if compuertaPosicion != 0:
