@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 from scipy.fft import fft, ifft
 from scipy.io.wavfile import write
 import datetime
+import os
 
 GPIO.cleanup()
 # Inicializar el gráfico
@@ -324,7 +325,10 @@ def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta,detect
     return detectado
 if __name__ == '__main__':
     hasRun = False
-    # GPIO.output(succionFan, GPIO.HIGH)
+    # Crear una carpeta llamada "audio" si no existe
+    carpeta_destino = 'audio'
+    if not os.path.exists(carpeta_destino):
+        os.makedirs(carpeta_destino)
     to0grados()
     # GPIO.output(empujeFan, GPIO.LOW)
     time.sleep(5)
@@ -357,7 +361,10 @@ if __name__ == '__main__':
                 fecha_hora_actual = datetime.datetime.now()
                 # Formatear la fecha y hora como una cadena
                 formato_fecha_hora = fecha_hora_actual.strftime("%Y-%m-%d_%H-%M-%S")
-                write('Mosquito:'+str(compuertaPosicion)+'fecha:formato_fecha_hora'+'.wav', frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
+                # Generar el nombre de archivo dentro de la carpeta "audio"
+                nombre_archivo = os.path.join(carpeta_destino, 'Mosquito:'+str(compuertaPosicion)+'fecha:formato_fecha_hora'+'.wav')
+                # Guardar la señal procesada en un archivo de audio WAV
+                write(nombre_archivo, frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
                 if compuertaPosicion != 0:
                     print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
                     posicionExpulsion(siguiente * compuertaPosicion)
