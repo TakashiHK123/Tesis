@@ -12,9 +12,11 @@ frecuencia_minima_esperada = 500  # Ajusta según tus necesidades
 
 # Cargar el archivo WAV
 fs, audio_grabado = wavfile.read(archivo_audio)
-
+audio_grabado = audio_grabado / np.max(np.abs(audio_grabado))
+ventana = np.hanning(len(audio_grabado))
+audio_grabado_ventaneado= audio_grabado*ventana
 # Aplicar la Transformada de Fourier (FFT)
-fft_resultado = np.fft.fft(audio_grabado)
+fft_resultado = np.fft.fft(audio_grabado_ventaneado)
 frecuencias = np.fft.fftfreq(len(fft_resultado), 1 / fs)
 
 # Encontrar la frecuencia dominante
