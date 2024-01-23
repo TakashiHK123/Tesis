@@ -50,6 +50,8 @@ def obtener_dispositivos_usb():
     return dispositivos_usb
 
 def configurar_mic():
+    frecuencia_muestreo_aumentada=frecuencia_muestreo*2
+    duracion_audio = 3
     dispositivos_usb = obtener_dispositivos_usb()
     if not dispositivos_usb:
         #print("No se encontraron dispositivos USB.")
@@ -65,11 +67,11 @@ def configurar_mic():
         # Configurar el micrófono seleccionado con 1 canal (mono)
         mic_configurado = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=2)  # Reemplaza 2 con tu cardindex
         mic_configurado.setchannels(1)  # Establecer el número de canales a 1 (mono)
-        mic_configurado.setrate(frecuencia_muestreo)  # Establecer la frecuencia de muestreo a 44.1 kHz
+        mic_configurado.setrate(frecuencia_muestreo_aumentada)  # Establecer la frecuencia de muestreo a 44.1 kHz
         mic_configurado.setformat(alsaaudio.PCM_FORMAT_S16_LE)  # Establecer el formato de audio a 16 bits little-endian
 
         # Intenta con un tamaño de periodo más pequeño
-        mic_configurado.setperiodsize(longitud_senal)  # Establecer el tamaño del periodo
+        mic_configurado.setperiodsize(int(frecuencia_muestreo*duracion_audio))  # Establecer el tamaño del periodo
 
         # Capturar datos
         return mic_configurado
