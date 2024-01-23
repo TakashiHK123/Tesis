@@ -12,6 +12,10 @@ frecuencia_minima_esperada = 500  # Ajusta según tus necesidades
 
 # Cargar el archivo WAV
 fs, audio_grabado = wavfile.read(archivo_audio)
+
+# Asegurarse de que los datos son de tipo int16
+datos = audio_grabado.astype(np.int16)
+
 audio_grabado = audio_grabado / np.max(np.abs(audio_grabado))
 ventana = np.hanning(len(audio_grabado))
 audio_grabado_ventaneado= audio_grabado*ventana
