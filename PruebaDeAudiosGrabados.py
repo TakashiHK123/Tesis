@@ -14,7 +14,7 @@ fs, audio_grabado = wavfile.read(archivo_audio)
 
 # Aplicar la Transformada de Fourier (FFT)
 fft_resultado = np.fft.fft(audio_grabado)
-frecuencias = np.fft.fftfreq(len(fft_resultado), 1 / fs)
+frecuencias = np.fft.fftfreq(1024, 1 / fs)
 
 # Encontrar la frecuencia dominante
 indice_frecuencia_dominante = np.argmax(np.abs(fft_resultado))
