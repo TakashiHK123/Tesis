@@ -313,9 +313,10 @@ def detectar_frecuencia_usb(capturador):
                     print(f'Frecuencia: {frecuencia_dominante} Hz')
                     time.sleep(0.01)
                     #signal_reconstruida = ifft(fft_resultado)
-                    fft_resultado_padded = np.pad(fft_resultado, (0, frecuencia_muestreo - len(fft_resultado)))
+                    #fft_resultado_padded = np.pad(fft_resultado, (0, frecuencia_muestreo - len(fft_resultado)))
                     # Reconstruir la señal en el dominio del tiempo utilizando la IFFT
-                    signal_reconstruida = np.real(ifft(fft_resultado_padded))
+                    #signal_reconstruida = np.real(ifft(fft_resultado_padded))
+                    signal_reconstruida = capturador.read()[1]
                     detected = False
                     return [frecuencia_dominante,signal_reconstruida]
     except KeyboardInterrupt:
