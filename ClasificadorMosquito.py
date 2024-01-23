@@ -368,7 +368,8 @@ if __name__ == '__main__':
                 # Generar el nombre de archivo dentro de la carpeta "audio"
                 nombre_archivo = os.path.join(carpeta_destino, 'Mosquito:'+str(compuertaPosicion)+'fecha:'+formato_fecha_hora+'.wav')
                 # Guardar la señal procesada en un archivo de audio WAV
-                write(nombre_archivo, frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
+                #write(nombre_archivo, frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
+                write(nombre_archivo, frecuencia_muestreo, resultado[1].astype(np.int16))
                 if compuertaPosicion != 0:
                     print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
                     posicionExpulsion(siguiente * compuertaPosicion)
