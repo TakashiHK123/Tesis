@@ -10,6 +10,7 @@ import pyudev
 import matplotlib.pyplot as plt
 from scipy.fft import fft, ifft
 from scipy.io.wavfile import write
+import datetime
 
 GPIO.cleanup()
 # Inicializar el gráfico
@@ -352,7 +353,11 @@ if __name__ == '__main__':
                 resultado = detectar_frecuencia_usb(mic_configurado)
                 compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],500, 630, 2,compuertaPosicion)
                 compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],630, 800, 3,compuertaPosicion)
-                write(str(compuertaPosicion)+'.wav', frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
+                # Obtener la fecha y hora actual
+                fecha_hora_actual = datetime.datetime.now()
+                # Formatear la fecha y hora como una cadena
+                formato_fecha_hora = fecha_hora_actual.strftime("%Y-%m-%d_%H-%M-%S")
+                write('Mosquito:'+str(compuertaPosicion)+'fecha:formato_fecha_hora'+'.wav', frecuencia_muestreo, np.real(resultado[1]).astype(np.int16))
                 if compuertaPosicion != 0:
                     print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
                     posicionExpulsion(siguiente * compuertaPosicion)
