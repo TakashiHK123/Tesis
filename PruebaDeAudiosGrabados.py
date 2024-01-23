@@ -4,10 +4,10 @@ from scipy.io import wavfile
 import matplotlib.pyplot as plt
 
 # Ruta del archivo WAV dentro de la carpeta "audio"
-archivo_audio = 'audio/Mosquito:2fecha:2024-01-23_16-40-04.wav'  # Ajusta el nombre del archivo según tus necesidades
+archivo_audio = 'audio/Mosquito:3fecha:2024-01-23_16-39-02.wav'  # Ajusta el nombre del archivo según tus necesidades
 
 # Suponiendo que ya tienes la frecuencia de referencia
-frecuencia_maxima_esperada = 630  # Por ejemplo, 440 Hz para el tono de La
+frecuencia_maxima_esperada = 800  # Por ejemplo, 440 Hz para el tono de La
 frecuencia_minima_esperada = 500  # Ajusta según tus necesidades
 
 # Cargar el archivo WAV
@@ -36,4 +36,6 @@ plt.show()
 if frecuencia_dominante<=frecuencia_maxima_esperada and frecuencia_dominante>=frecuencia_minima_esperada:
     print(f"El audio en {archivo_audio} corresponde a la frecuencia esperada.")
 else:
+    print(frecuencia_dominante)
+    print(fs)
     print(f"El audio en {archivo_audio} no corresponde a la frecuencia esperada.")
