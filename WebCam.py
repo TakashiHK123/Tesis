@@ -1,20 +1,16 @@
+import os
 import cv2
 
-def capturar_foto(ruta_guardado):
-    # Inicializar la cámara
-    cap = cv2.VideoCapture(0)  # 0 indica el primer dispositivo de video (puede ser 1, 2, etc. dependiendo de la cámara)
+def capturar_foto(nombre_archivo):
+    directorio_actual = os.path.dirname(os.path.abspath(__file__))
+    ruta_imagen = os.path.join(directorio_actual, nombre_archivo)
 
-    # Capturar un solo fotograma
+    cap = cv2.VideoCapture(0)
     ret, frame = cap.read()
-
-    # Guardar la imagen
-    cv2.imwrite(ruta_guardado, frame)
-
-    # Liberar la cámara
+    cv2.imwrite(ruta_imagen, frame)
     cap.release()
 
 if __name__ == "__main__":
-    # Ruta donde guardar la imagen
-    ruta_imagen = "/ruta/de/tu/carpeta/imagenes/foto.jpg"
-    capturar_foto(ruta_imagen)
-    print(f"Foto guardada en: {ruta_imagen}")
+    nombre_archivo = "foto.jpg"
+    capturar_foto(nombre_archivo)
+    print(f"Foto guardada en: {nombre_archivo}")
