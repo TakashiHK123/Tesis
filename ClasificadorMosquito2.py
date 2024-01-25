@@ -164,7 +164,7 @@ def retorno(grados):
         steps(-grados_a_pasos(grados))
 
 
-def posicionExpulsion(grados):
+def siguientePosicion(grados):
     if (grados > 180 and grados!=0):
         grados = 360 - grados
         steps(-grados_a_pasos(grados))
@@ -375,7 +375,7 @@ if __name__ == '__main__':
             #compuertaCerrado()
             #Se espera detectar dentro de la capsula
             #deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
-            posicionExpulsion(siguiente * 1)#Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
+            siguientePosicion(siguiente * 1)#Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
             print("Para el succionador")
             GPIO.output(pinSuccionador, GPIO.HIGH)
             print('Se procede a la clasificacion del mosquito')
@@ -385,28 +385,37 @@ if __name__ == '__main__':
             estadoDeteccion=False
             while not estadoDeteccion:
                 resultado = detectar_frecuencia_usb(mic_configurado)
-                compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],500, 630, 2,compuertaPosicion)
-                compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],630, 800, 3,compuertaPosicion)
-                # Obtener la fecha y hora actual
-                fecha_hora_actual = datetime.datetime.now()
-                # Formatear la fecha y hora como una cadena
-                formato_fecha_hora = fecha_hora_actual.strftime("%Y-%m-%d_%H-%M-%S")
-                # Generar el nombre de archivo dentro de la carpeta "audio"
-                nombre_archivo = os.path.join(carpeta_destino, 'Mosquito:'+str(compuertaPosicion)+'fecha:'+formato_fecha_hora+'.wav')
-                # Guardar la señal procesada en un archivo de audio WAV
-                datos_np = np.frombuffer(resultado[1], dtype=np.int16)
-                write(nombre_archivo, frecuencia_muestreo, datos_np)
-                nombre_archivo = 'Mosquito:'+str(compuertaPosicion)+'fecha:'+formato_fecha_hora+'.jpg'
-                capturar_foto(nombre_archivo)
-                print('Se guarda la imagen del mosquito')
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],500, 630, 1,compuertaPosicion)
+                compuertaPosicion=selectorCompuertaByRangoFrecuencia(resultado[0],630, 800, 2,compuertaPosicion)
                 if compuertaPosicion != 0:
+                    GPIO.output(pinSuccionador, GPIO.LOW)#Se activa el succionador
+                    time.sleep(1)
+                    siguientePosicion(siguiente * 1) #Se mueve a la posicion de la camara verificar esto/////////
+                    GPIO.output(pinSuccionador, GPIO.HIGH)#Paramos el succionador para sacarle una foto
+                    time.sleep(2)
+                    # Obtener la fecha y hora actual
+                    fecha_hora_actual = datetime.datetime.now()
+                    # Formatear la fecha y hora como una cadena
+                    formato_fecha_hora = fecha_hora_actual.strftime("%Y-%m-%d_%H-%M-%S")
+                    # Generar el nombre de archivo dentro de la carpeta "audio"
+                    nombre_archivo = os.path.join(carpeta_destino, 'Mosquito:' + str(
+                        compuertaPosicion) + 'fecha:' + formato_fecha_hora + '.wav')
+                    # Guardar la señal procesada en un archivo de audio WAV
+                    datos_np = np.frombuffer(resultado[1], dtype=np.int16)
+                    write(nombre_archivo, frecuencia_muestreo, datos_np)
+                    nombre_archivo = 'Mosquito:' + str(compuertaPosicion) + 'fecha:' + formato_fecha_hora + '.jpg'
+                    capturar_foto(nombre_archivo)
+                    print('Se guarda la imagen del mosquito')
+
+                    #---------Se guarda el audio y la imagen------
+                    GPIO.output(pinSuccionador, GPIO.LOW)#Volvemos a activar el succionador para mover
+                    time.sleep(2)
                     print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
-                    posicionExpulsion(siguiente * compuertaPosicion)
+                    siguientePosicion(siguiente * compuertaPosicion)
                     to90grados()
-                    print("se enciende succionador para el empuje")
-                    GPIO.output(pinSuccionador, GPIO.LOW)
                     time.sleep(5)
-                    retorno(siguiente * compuertaPosicion)
+                    GPIO.output(pinSuccionador, GPIO.HIGH) #Apagamos el succionar mientras
+                    retorno(siguiente * (compuertaPosicion+2))
                     compuertaPosicion = 0
                     estadoDeteccion=True
 
