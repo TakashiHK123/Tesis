@@ -353,6 +353,26 @@ def capturar_foto(nombre_archivo):
     cap.release()
 
 
+def guardar_datos(numero_mosquito, audio_data, frecuencia_muestreo):
+    # Crear la ruta base
+    ruta_base = f'datos/mosquitos{numero_mosquito}'
+
+    # Crear la carpeta del mosquito si no existe
+    if not os.path.exists(ruta_base):
+        os.makedirs(ruta_base)
+
+    # Obtener la fecha y hora actual para el nombre de archivo
+    formato_fecha_hora = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+
+    # Guardar el archivo de audio
+    nombre_audio = f'{ruta_base}/audio.wav'
+    write(nombre_audio, frecuencia_muestreo, audio_data)
+
+    # Capturar una foto y guardarla
+    nombre_imagen = f'{ruta_base}/imagen_{formato_fecha_hora}.jpg'
+    capturar_foto(nombre_imagen)
+
+
 if __name__ == '__main__':
     hasRun = False
     # Crear una carpeta llamada "audio" si no existe
@@ -402,11 +422,8 @@ if __name__ == '__main__':
                         compuertaPosicion) + 'fecha:' + formato_fecha_hora + '.wav')
                     # Guardar la señal procesada en un archivo de audio WAV
                     datos_np = np.frombuffer(resultado[1], dtype=np.int16)
-                    write(nombre_archivo, frecuencia_muestreo, datos_np)
-                    nombre_archivo = 'Mosquito:' + str(compuertaPosicion) + 'fecha:' + formato_fecha_hora + '.jpg'
-                    capturar_foto(nombre_archivo)
-                    print('Se guarda la imagen del mosquito')
-
+                    guardar_datos(compuertaPosicion,datos_np,frecuencia_muestreo)
+                    print('Se guarda la imagen del mosquito y el audio')
                     #---------Se guarda el audio y la imagen------
                     GPIO.output(pinSuccionador, GPIO.LOW)#Volvemos a activar el succionador para mover
                     time.sleep(2)
