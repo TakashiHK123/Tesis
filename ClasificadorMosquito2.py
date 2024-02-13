@@ -330,7 +330,7 @@ def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta,detect
         return compuerta
     return detectado
 
-def capturar_foto(nombre_archivo):
+def capturar_foto(nombre_archivo, numero_mosquitos,formato_fecha_hora):
     cap = cv2.VideoCapture(0) #es el puerto en donde se encuentra conectado la camara web por usb
 
     # Verificar si la cámara está disponible
@@ -340,13 +340,21 @@ def capturar_foto(nombre_archivo):
 
     # Crear la carpeta 'imagenes' si no existe
     directorio_actual = os.path.dirname(os.path.abspath(__file__))
-    carpeta_imagenes = os.path.join(directorio_actual, "imagenes")
+    carpeta_imagenes = os.path.join(directorio_actual, "datos")
 
     if not os.path.exists(carpeta_imagenes):
         os.makedirs(carpeta_imagenes)
 
+    # Generar el nombre de la subcarpeta "mosquitos#"
+    nombre_carpeta_mosquitos = f'mosquitos{numero_mosquitos}_{formato_fecha_hora}'
+    carpeta_mosquitos = os.path.join(carpeta_imagenes, nombre_carpeta_mosquitos)
+
+    # Crear la subcarpeta si no existe
+    if not os.path.exists(carpeta_mosquitos):
+        os.makedirs(carpeta_mosquitos)
+
     # Ruta completa de la imagen dentro de la carpeta 'imagenes'
-    ruta_imagen = os.path.join(carpeta_imagenes, nombre_archivo)
+    ruta_imagen = os.path.join(carpeta_mosquitos, nombre_archivo)
 
     ret, frame = cap.read()
     cv2.imwrite(ruta_imagen, frame)
@@ -354,23 +362,21 @@ def capturar_foto(nombre_archivo):
 
 
 def guardar_datos(numero_mosquito, audio_data, frecuencia_muestreo):
+    # Obtener la fecha y hora actual para el nombre de archivo
+    formato_fecha_hora = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     # Crear la ruta base
-    ruta_base = f'datos/mosquitos{numero_mosquito}'
+    ruta_base = f'datos/mosquitos{numero_mosquito}_{formato_fecha_hora}'
 
     # Crear la carpeta del mosquito si no existe
     if not os.path.exists(ruta_base):
         os.makedirs(ruta_base)
-
-    # Obtener la fecha y hora actual para el nombre de archivo
-    formato_fecha_hora = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-
     # Guardar el archivo de audio
     nombre_audio = f'{ruta_base}/audio.wav'
     write(nombre_audio, frecuencia_muestreo, audio_data)
 
     # Capturar una foto y guardarla
-    nombre_imagen = f'{ruta_base}/imagen_{formato_fecha_hora}.jpg'
-    capturar_foto(nombre_imagen)
+    nombre_imagen = f'{ruta_base}/imagen.jpg'
+    capturar_foto(nombre_imagen,numero_mosquito,formato_fecha_hora)
 
 
 if __name__ == '__main__':
