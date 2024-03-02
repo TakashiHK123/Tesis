@@ -175,27 +175,18 @@ def gradosPosicion(grados):
         steps(grados_a_pasos(grados))
     print('Seleccionador en posicion')
 
-def deteccionMosquito():
+def deteccionMosquito(value):
     estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
+
     while True:
         # Lee el valor del pin GPIO
         value = GPIO.input(pin_sensor)
-
         if value == GPIO.HIGH:
-            #print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
             estado = 1
-            #print(f'Estado:{estado}')
-            # Realiza acciones específicas para objetos blancos
         else:
-            #print(f'Estado:{estado}')
             if estado == 1:
-                #print('El mosquito a ingresado, proceder a cerrar la compuerta')
                 print('Se procede a la deteccion del mosquito')
-                estado = 0
                 break
-            #print(value)
-
-            # Realiza acciones específicas para objetos negros
 
 def deteccionMosquitoDentroDeLaCapsula():
     estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
