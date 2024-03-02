@@ -29,6 +29,9 @@ GPIO.cleanup()
 longitud_senal = 1024 #Tamanho del bufer de lectura
 frecuencia_muestreo = 44100 # Establecer la frecuencia de muestreo a 42.667 kHz
 
+
+puertoCamara=0
+puertoMicrofono=2
 # Use BCM GPIO references
 # Instead of physical pin numbers
 GPIO.setmode(GPIO.BCM)
@@ -148,7 +151,7 @@ def steps(nb):
 
 # Start main loop
 nbStepsPerRev = 2048
-siguiente = 45
+grados = 45
 
 
 def grados_a_pasos(grados):
@@ -164,7 +167,7 @@ def retorno(grados):
         steps(-grados_a_pasos(grados))
 
 
-def siguientePosicion(grados):
+def gradosPosicion(grados):
     if (grados > 180 and grados!=0):
         grados = 360 - grados
         steps(-grados_a_pasos(grados))
@@ -257,7 +260,7 @@ def configurar_mic():
     if 1 <= seleccion <= len(dispositivos_usb):
 
         # Configurar el micrófono seleccionado con 1 canal (mono)
-        mic_configurado = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=2)  # Reemplaza 2 con tu cardindex
+        mic_configurado = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=puertoMicrofono)  # Reemplaza 2 con tu cardindex
         mic_configurado.setchannels(1)  # Establecer el número de canales a 1 (mono)
         mic_configurado.setrate(frecuencia_muestreo)  # Establecer la frecuencia de muestreo a 44.1 kHz
         mic_configurado.setformat(alsaaudio.PCM_FORMAT_S16_LE)  # Establecer el formato de audio a 16 bits little-endian
@@ -326,34 +329,24 @@ def detectar_frecuencia_usb(capturador):
 def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta,detectado):
     if frecuencia >= minimo and frecuencia <= maximo:
         print(f'Se a detectado un mosquito entre los rangos de frecuencia:{minimo} - {maximo} para compuerta:{compuerta}')
-        # steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
+        # steps(grados_a_pasos(grados*compuerta))# parcourt un tour dans le sens horaire
         return compuerta
     return detectado
 
-def capturar_foto(nombre_archivo, numero_mosquitos,formato_fecha_hora):
-    cap = cv2.VideoCapture(0) #es el puerto en donde se encuentra conectado la camara web por usb
+def capturar_foto(carpeta_mosquitos):
+    cap = cv2.VideoCapture(puertoCamara) #es el puerto en donde se encuentra conectado la camara web por usb
 
     # Verificar si la cámara está disponible
     if not cap.isOpened():
         print("Error: No se puede acceder a la cámara. ¿Está conectada correctamente?")
         return
-
-    # Crear la carpeta 'imagenes' si no existe
-    directorio_actual = os.path.dirname(os.path.abspath(__file__))
-    carpeta_imagenes = os.path.join(directorio_actual, "datos")
-
-    if not os.path.exists(carpeta_imagenes):
-        os.makedirs(carpeta_imagenes)
-
-    # Generar el nombre de la subcarpeta "mosquitos#"
-    nombre_carpeta_mosquitos = f'mosquitos{numero_mosquitos}_{formato_fecha_hora}'
-    carpeta_mosquitos = os.path.join(carpeta_imagenes, nombre_carpeta_mosquitos)
-
-    # Crear la subcarpeta si no existe
+    # Crear la carpeta del mosquito si no existe
     if not os.path.exists(carpeta_mosquitos):
         os.makedirs(carpeta_mosquitos)
+    #carpeta_mosquitos = os.path.join(nombre_archivo, nombre_carpeta_mosquitos)
 
     # Ruta completa de la imagen dentro de la carpeta 'imagenes'
+    nombre_archivo='imagen.jpg'
     ruta_imagen = os.path.join(carpeta_mosquitos, nombre_archivo)
 
     ret, frame = cap.read()
@@ -365,18 +358,18 @@ def guardar_datos(numero_mosquito, audio_data, frecuencia_muestreo):
     # Obtener la fecha y hora actual para el nombre de archivo
     formato_fecha_hora = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
     # Crear la ruta base
-    ruta_base = f'datos/mosquitos{numero_mosquito}_{formato_fecha_hora}'
+    ruta_carpeta = f'datos/mosquitos{numero_mosquito}_{formato_fecha_hora}'
 
     # Crear la carpeta del mosquito si no existe
-    if not os.path.exists(ruta_base):
-        os.makedirs(ruta_base)
+    if not os.path.exists(ruta_carpeta):
+        os.makedirs(ruta_carpeta)
     # Guardar el archivo de audio
-    nombre_audio = f'{ruta_base}/audio.wav'
+    nombre_audio = f'{ruta_carpeta}/audio.wav'
     write(nombre_audio, frecuencia_muestreo, audio_data)
 
     # Capturar una foto y guardarla
-    nombre_imagen = f'{ruta_base}/imagen.jpg'
-    capturar_foto(nombre_imagen,numero_mosquito,formato_fecha_hora)
+    ruta_carpeta = f'{ruta_carpeta}'
+    capturar_foto(ruta_carpeta)
 
 
 if __name__ == '__main__':
@@ -401,7 +394,7 @@ if __name__ == '__main__':
             #compuertaCerrado()
             #Se espera detectar dentro de la capsula
             #deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
-            siguientePosicion(siguiente * 1)#Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
+            gradosPosicion(grados * 1)#Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
             print("Para el succionador")
             GPIO.output(pinSuccionador, GPIO.HIGH)
             print('Se procede a la clasificacion del mosquito')
@@ -416,7 +409,7 @@ if __name__ == '__main__':
                 if compuertaPosicion != 0:
                     GPIO.output(pinSuccionador, GPIO.LOW)#Se activa el succionador
                     time.sleep(1)
-                    siguientePosicion(siguiente * 1) #Se mueve a la posicion de la camara verificar esto/////////
+                    gradosPosicion(grados * 1) #Se mueve a la posicion de la camara verificar esto/////////
                     GPIO.output(pinSuccionador, GPIO.HIGH)#Paramos el succionador para sacarle una foto
                     time.sleep(2)
                     # Obtener la fecha y hora actual
@@ -434,11 +427,11 @@ if __name__ == '__main__':
                     GPIO.output(pinSuccionador, GPIO.LOW)#Volvemos a activar el succionador para mover
                     time.sleep(2)
                     print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
-                    siguientePosicion(siguiente * compuertaPosicion)
+                    gradosPosicion(grados * compuertaPosicion)
                     to90grados()
                     time.sleep(5)
                     GPIO.output(pinSuccionador, GPIO.HIGH) #Apagamos el succionar mientras
-                    retorno(siguiente * (compuertaPosicion+2))
+                    retorno(grados * (compuertaPosicion+2))
                     compuertaPosicion = 0
                     estadoDeteccion=True
 
