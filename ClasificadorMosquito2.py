@@ -175,7 +175,7 @@ def gradosPosicion(grados):
         steps(grados_a_pasos(grados))
     print('Seleccionador en posicion')
 
-def deteccionMosquito(value):
+def deteccionMosquito():
     estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
 
     while True:
