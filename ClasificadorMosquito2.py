@@ -329,6 +329,11 @@ def capturar_foto(carpeta_mosquitos):
     if not cap.isOpened():
         print("Error: No se puede acceder a la cámara. ¿Está conectada correctamente?")
         return
+
+    # Ajustar la resolución de la cámara
+    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
+    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
+
     # Crear la carpeta del mosquito si no existe
     if not os.path.exists(carpeta_mosquitos):
         os.makedirs(carpeta_mosquitos)
@@ -339,7 +344,9 @@ def capturar_foto(carpeta_mosquitos):
     ruta_imagen = os.path.join(carpeta_mosquitos, nombre_archivo)
 
     ret, frame = cap.read()
-    cv2.imwrite(ruta_imagen, frame)
+    # Aplicar un filtro de enfoque a la imagen capturada
+    frame_enfocado = cv2.GaussianBlur(frame, (5, 5), 0)
+    cv2.imwrite(ruta_imagen, frame_enfocado)
     cap.release()
 
 
