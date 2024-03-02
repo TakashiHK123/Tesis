@@ -293,37 +293,40 @@ def detectar_frecuencia_usb(capturador):
             datos = np.frombuffer(capturador.read()[1][:longitud_buffer], dtype=np.int16)
             # Realizar la FFT
             # Calcular nivel de decibelios RMS
-            if datos is not None:
-                rms_level_db = 20 * np.log10(np.sqrt(np.mean(datos ** 2)))
-                # Calcular las frecuencias correspondientes
-                fft_resultado = np.fft.fft(datos)
+            if datos==0:
+                print('El valor del microfono es zero')
+            else:
+                if datos is not None:
+                    rms_level_db = 20 * np.log10(np.sqrt(np.mean(datos ** 2)))
+                    # Calcular las frecuencias correspondientes
+                    fft_resultado = np.fft.fft(datos)
 
-                # Calcular las frecuencias correspondientes
-                frecuencias = np.fft.fftfreq(longitud_senal, 1 / frecuencia_muestreo)
+                    # Calcular las frecuencias correspondientes
+                    frecuencias = np.fft.fftfreq(longitud_senal, 1 / frecuencia_muestreo)
 
-                # Encontrar el indice de la frecuencia dominante
-                indice_frecuencia_dominante = np.argmax(np.abs(fft_resultado))
+                    # Encontrar el indice de la frecuencia dominante
+                    indice_frecuencia_dominante = np.argmax(np.abs(fft_resultado))
 
-                # Obtener la frecuencia dominante en Hz
-                # Actualizar la línea en el gráfico
-                #line.set_xdata(np.abs(frecuencias))
-                #line.set_ydata(fft_resultado)
-                # print(np.abs(fft_resultado))
-                #plt.draw()
-                # Actualizar el gráfico
-                #plt.pause(0.001)  # Añadi un pequeño retraso para permitir la actualización de la interfaz gráfica
-                frecuencia_dominante = frecuencias[indice_frecuencia_dominante]
-                if frecuencia_dominante != 0 and frecuencia_dominante >= 300 and rms_level_db > umbral_db and frecuencia_dominante <= 1000:
-                    print(f'Decibelios:{rms_level_db}')
-                    print(f'Frecuencia: {frecuencia_dominante} Hz')
-                    time.sleep(0.01)
-                    #signal_reconstruida = ifft(fft_resultado)
-                    #fft_resultado_padded = np.pad(fft_resultado, (0, frecuencia_muestreo - len(fft_resultado)))
-                    # Reconstruir la señal en el dominio del tiempo utilizando la IFFT
-                    #signal_reconstruida = np.real(ifft(fft_resultado_padded))
-                    signal_reconstruida = capturador.read()[1]
-                    detected = False
-                    return [frecuencia_dominante,signal_reconstruida]
+                    # Obtener la frecuencia dominante en Hz
+                    # Actualizar la línea en el gráfico
+                    #line.set_xdata(np.abs(frecuencias))
+                    #line.set_ydata(fft_resultado)
+                    # print(np.abs(fft_resultado))
+                    #plt.draw()
+                    # Actualizar el gráfico
+                    #plt.pause(0.001)  # Añadi un pequeño retraso para permitir la actualización de la interfaz gráfica
+                    frecuencia_dominante = frecuencias[indice_frecuencia_dominante]
+                    if frecuencia_dominante != 0 and frecuencia_dominante >= 300 and rms_level_db > umbral_db and frecuencia_dominante <= 1000:
+                        print(f'Decibelios:{rms_level_db}')
+                        print(f'Frecuencia: {frecuencia_dominante} Hz')
+                        time.sleep(0.01)
+                        #signal_reconstruida = ifft(fft_resultado)
+                        #fft_resultado_padded = np.pad(fft_resultado, (0, frecuencia_muestreo - len(fft_resultado)))
+                        # Reconstruir la señal en el dominio del tiempo utilizando la IFFT
+                        #signal_reconstruida = np.real(ifft(fft_resultado_padded))
+                        signal_reconstruida = capturador.read()[1]
+                        detected = False
+                        return [frecuencia_dominante,signal_reconstruida]
     except KeyboardInterrupt:
         pass
 def selectorCompuertaByRangoFrecuencia(frecuencia,minimo,maximo,compuerta,detectado):
