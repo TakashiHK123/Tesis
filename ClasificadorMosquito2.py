@@ -249,7 +249,7 @@ def obtener_dispositivos_usb():
 def configurar_mic():
     dispositivos_usb = obtener_dispositivos_usb()
     if not dispositivos_usb:
-        # print("No se encontraron dispositivos USB.")
+        print("No se encontraron dispositivos USB.")
         return None
     # print("Dispositivos USB encontrados:")
     # for i, dispositivo in enumerate(dispositivos_usb, 1):
