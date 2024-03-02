@@ -293,7 +293,7 @@ def detectar_frecuencia_usb(capturador):
             datos = np.frombuffer(capturador.read()[1][:longitud_buffer], dtype=np.int16)
             # Realizar la FFT
             # Calcular nivel de decibelios RMS
-            if datos==0:
+            if datos is 0:
                 print('El valor del microfono es zero')
             else:
                 if datos is not None:
