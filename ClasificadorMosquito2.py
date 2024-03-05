@@ -224,6 +224,7 @@ def obtener_dispositivos_usb():
         if es_dispositivo_usb(dispositivo):
             dispositivos_usb.append(dispositivo.device_node)
             print("Este es un dispositivo USB de audio.")
+            print(f'{dispositivo.device_node} devType:{devtype}')
         else:
             print("Este no es un dispositivo USB de audio.")
 
@@ -333,7 +334,7 @@ def capturar_foto(carpeta_mosquitos):
     # Ajustar la resolución de la cámara
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
-
+    
     # Crear la carpeta del mosquito si no existe
     if not os.path.exists(carpeta_mosquitos):
         os.makedirs(carpeta_mosquitos)
@@ -343,11 +344,24 @@ def capturar_foto(carpeta_mosquitos):
     nombre_archivo='imagen.jpg'
     ruta_imagen = os.path.join(carpeta_mosquitos, nombre_archivo)
 
-    ret, frame = cap.read()
-    # Aplicar un filtro de enfoque a la imagen capturada
-    frame_enfocado = cv2.GaussianBlur(frame, (5, 5), 0)
-    cv2.imwrite(ruta_imagen, frame_enfocado)
+    tiempo_inicial = time.time()
+    brillo_maximo = 0
+    while time.time() - tiempo_inicial < 1.5:
+        ret, frame = cap.read()
+        if ret:
+            #Aplicar un filtro de enfoque a la imagen capturada
+            frame_enfocado = cv2.GaussianBlur(frame, (5,5),0)
+            #Calcular el brillo de la imagen
+            brillo = cv2.mean(frame_enfocado)[0]
+            #Guardar la imagen con el brillo maximo
+            if brillo > brillo_maximo:
+                brillo_maximo = brillo
+                frame_maximo = frame_enfocado.copy()
+    
+    
+    cv2.imwrite(ruta_imagen, frame_maximo)
     cap.release()
+
 
 
 def guardar_datos(numero_mosquito, audio_data, frecuencia_muestreo):
