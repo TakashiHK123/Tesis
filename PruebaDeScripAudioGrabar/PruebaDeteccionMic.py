@@ -5,15 +5,15 @@ def listar_dispositivos():
     num_dispositivos = p.get_device_count()
     for i in range(num_dispositivos):
         info = p.get_device_info_by_index(i)
-        print(f"Dispositivo {i}: {info['name']}, {info['maxInputChannels']} canales de entrada")
+        print("Dispositivo {}: {}, {} canales de entrada".format(i, info['name'], info['maxInputChannels']))
 
 def seleccionar_mic_usb_deseado():
     p = pyaudio.PyAudio()
     num_dispositivos = p.get_device_count()
     for i in range(num_dispositivos):
         info = p.get_device_info_by_index(i)
-        if "micrófono USB" in info["name"].lower():  # Ajusta este criterio según el nombre del dispositivo
-            print(f"Seleccionando micrófono USB: {info['name']}")
+        if "micrófono USB" in info["name"].lower():
+            print("Seleccionando micrófono USB: {}".format(info['name']))
             return i
     return None
 
