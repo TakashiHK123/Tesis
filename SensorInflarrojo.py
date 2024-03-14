@@ -15,9 +15,9 @@ def deteccionMosquito():
     while True:
         # Lee el valor del pin GPIO
         value = GPIO.input(pin_sensor)
-        print(f'Value={value}')
+        #print(f'Value={value}')
         if value == GPIO.HIGH:
-            print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
+            #print('Mosquito detectado: Se espera a que pase todo para cerrar la compuerta')
             estado = 1
             print(f'Estado:{estado}')
             # Realiza acciones específicas para objetos blancos
@@ -27,7 +27,7 @@ def deteccionMosquito():
                 print('El mosquito a ingresado, proceder a cerrar la compuerta')
                 estado = 0
                 break
-            print(value)
+            #print(value)
             
             # Realiza acciones específicas para objetos negros
 
@@ -35,5 +35,5 @@ def deteccionMosquito():
         time.sleep(0.01)
 
 detected = deteccionMosquito()
-print(detected)
+#print(detected)
 print('Se a detectado y a pasado')

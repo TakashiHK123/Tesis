@@ -117,7 +117,7 @@ if __name__ == '__main__' :
     #while not hasRun:
             #steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
             
-    #posicionExpulsion(siguiente*1)
+    posicionExpulsion(siguiente*1)
     #GPIO.output(succionFan, GPIO.LOW)
     #GPIO.output(empujeFan, GPIO.HIGH)
     #to0grados()

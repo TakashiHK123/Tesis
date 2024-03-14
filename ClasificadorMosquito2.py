@@ -7,8 +7,8 @@ import scipy.io.wavfile as wav
 import alsaaudio
 import time
 import pyudev
-import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft
+#import matplotlib.pyplot as plt
+from scipy.fftpack import fft, ifft
 from scipy.io.wavfile import write
 import datetime
 import os
@@ -332,8 +332,8 @@ def capturar_foto(carpeta_mosquitos):
         return
 
     # Ajustar la resolución de la cámara
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
+    #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
+    #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
     
     # Crear la carpeta del mosquito si no existe
     if not os.path.exists(carpeta_mosquitos):
