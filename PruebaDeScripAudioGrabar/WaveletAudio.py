@@ -43,15 +43,54 @@ def grabar_audio():
     wf.setframerate(RATE)
     wf.writeframes(b''.join(frames))
     wf.close()
-def leer_audio(filename):
-    with wave.open(filename, 'rb') as wf:
-        frames = wf.readframes(-1)
-        audio_data = np.frombuffer(frames, dtype=np.int16)
-        rate = wf.getframerate()
-    return audio_data, rate
+import pyaudio
+import wave
+import numpy as np
+import matplotlib.pyplot as plt
+import pywt
+from scipy.fft import fft
+
+CHUNK = 1024
+FORMAT = pyaudio.paInt16
+CHANNELS = 1
+RATE = 44100
+RECORD_SECONDS = 5
+WAVE_OUTPUT_FILENAME = "audios/output.wav"
+
+def grabar_audio():
+    p = pyaudio.PyAudio()
+
+    stream = p.open(format=FORMAT,
+                    channels=CHANNELS,
+                    rate=RATE,
+                    input=True,
+                    frames_per_buffer=CHUNK)
+
+    frames = []
+
+    print("Recording...")
+
+    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
+        data = stream.read(CHUNK)
+        frames.append(data)
+
+    print("Finished recording.")
+
+    stream.stop_stream()
+    stream.close()
+    p.terminate()
+
+    wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
+    wf.setnchannels(CHANNELS)
+    wf.setsampwidth(p.get_sample_size(FORMAT))
+    wf.setframerate(RATE)
+    wf.writeframes(b''.join(frames))
+    wf.close()
 
 def detectar_frecuencias():
-    audio_data, RATE = leer_audio(WAVE_OUTPUT_FILENAME)
+    wf = wave.open(WAVE_OUTPUT_FILENAME, 'rb')
+    audio_data = wf.readframes(wf.getnframes())
+    audio_data = np.frombuffer(audio_data, dtype=np.int16)
 
     # Calcular la transformada de Fourier
     fft_data = fft(audio_data)
