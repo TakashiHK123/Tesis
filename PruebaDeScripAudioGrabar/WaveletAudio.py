@@ -12,13 +12,6 @@ RATE = 44100
 RECORD_SECONDS = 5
 WAVE_OUTPUT_FILENAME = "audios/output.wav"
 
-def listar_dispositivos():
-    p = pyaudio.PyAudio()
-    num_dispositivos = p.get_device_count()
-    for i in range(num_dispositivos):
-        info = p.get_device_info_by_index(i)
-        print(f"Dispositivo {i}: {info['name']}, {info['maxInputChannels']} canales de entrada")
-
 def seleccionar_mic_usb_deseado():
     p = pyaudio.PyAudio()
     num_dispositivos = p.get_device_count()
@@ -98,6 +91,5 @@ def detectar_frecuencias():
     # Tu lógica para procesar las frecuencias dominantes con wavelets aquí
 
 if __name__ == "__main__":
-    listar_dispositivos()
     grabar_audio()
     detectar_frecuencias()
