@@ -176,15 +176,20 @@ def gradosPosicion(grados):
     print('Seleccionador en posicion')
 
 def deteccionMosquito():
+    estado=1
     while True:
-        tiempo_inicio = time.time() #Inicia el temporizador
         # Lee el valor del pin GPIO
         value = GPIO.input(pin_sensor)
         if value == GPIO.LOW:
+            if estado==1:
+                tiempo_inicio = time.time() #Inicia el temporizador
+                estado=2
             tiempo_baja = abs(time.time() - tiempo_inicio)
             if tiempo_baja >= tiempoDelay:
                 print('Se procede a la deteccion del mosquito')
                 break
+        else:
+            estado = 1
 
 def deteccionMosquitoDentroDeLaCapsula():
     estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
