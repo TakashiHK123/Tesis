@@ -29,7 +29,7 @@ GPIO.cleanup()
 longitud_senal = 1024 #Tamanho del bufer de lectura
 frecuencia_muestreo = 44100 # Establecer la frecuencia de muestreo a 42.667 kHz
 
-
+tiempoDelay = 1.5 #El tiempo necesario para no detectar un falso negativo
 puertoCamara=0
 puertoMicrofono=2
 # Use BCM GPIO references
@@ -177,11 +177,14 @@ def gradosPosicion(grados):
 
 def deteccionMosquito():
     while True:
+        tiempo_inicio = time.time() #Inicia el temporizador
         # Lee el valor del pin GPIO
         value = GPIO.input(pin_sensor)
         if value == GPIO.LOW:
-            print('Se procede a la deteccion del mosquito')
-            break
+            tiempo_baja = abs(time.time() - tiempo_inicio)
+            if tiempo_baja >= tiempoDelay:
+                print('Se procede a la deteccion del mosquito')
+                break
 
 def deteccionMosquitoDentroDeLaCapsula():
     estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
