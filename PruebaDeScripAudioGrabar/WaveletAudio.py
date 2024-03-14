@@ -56,34 +56,30 @@ CHANNELS = 1
 RATE = 44100
 RECORD_SECONDS = 5
 WAVE_OUTPUT_FILENAME = "audios/output.wav"
-
+dispositivo_usb = 2  # Índice del dispositivo USB deseado
 def grabar_audio():
     p = pyaudio.PyAudio()
 
-    stream = p.open(format=FORMAT,
-                    channels=CHANNELS,
-                    rate=RATE,
+    stream = p.open(format=pyaudio.paInt16,
+                    channels=1,
+                    rate=44100,
                     input=True,
-                    frames_per_buffer=CHUNK)
-
+                    input_device_index=dispositivo_usb,
+                    frames_per_buffer=1024)
     frames = []
-
-    print("Recording...")
-
-    for i in range(0, int(RATE / CHUNK * RECORD_SECONDS)):
-        data = stream.read(CHUNK)
+    print("Grabando...")
+    for _ in range(0, int(44100 / 1024 * 5)):  # Grabar durante 5 segundos
+        data = stream.read(1024)
         frames.append(data)
-
-    print("Finished recording.")
-
+    print("Grabación finalizada.")
     stream.stop_stream()
     stream.close()
     p.terminate()
 
-    wf = wave.open(WAVE_OUTPUT_FILENAME, 'wb')
-    wf.setnchannels(CHANNELS)
-    wf.setsampwidth(p.get_sample_size(FORMAT))
-    wf.setframerate(RATE)
+    wf = wave.open("audios/output.wav", 'wb')
+    wf.setnchannels(1)
+    wf.setsampwidth(p.get_sample_size(pyaudio.paInt16))
+    wf.setframerate(44100)
     wf.writeframes(b''.join(frames))
     wf.close()
 
