@@ -9,7 +9,7 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 CHUNK = 512
-RECORD_SECONDS = 5
+RECORD_SECONDS = 30
 
 # Inicializar PyAudio
 audio = pyaudio.PyAudio()
@@ -51,7 +51,7 @@ plt.show()
 # Calcular la transformada wavelet
 cwtmatr = signal.cwt(audio_data, signal.ricker, np.arange(1, 50))
 # Guardar el audio grabado en un archivo WAV
-wf = wave.open("grabacion.wav", 'wb')
+wf = wave.open("SinAire.wav", 'wb')
 wf.setnchannels(CHANNELS)
 wf.setsampwidth(audio.get_sample_size(FORMAT))
 wf.setframerate(RATE)

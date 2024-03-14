@@ -43,7 +43,7 @@ def to90grados():
 
 
 def to0grados():
-    for angle0 in range(100, -1, -5):
+    for angle0 in range(105, -1, -5):
         duty_cycle0 = 2.5 + (angle0 / 18.0)
         p.ChangeDutyCycle(duty_cycle0)
         
@@ -54,7 +54,7 @@ try:
     #c.stop()
     #p.stop()
     #GPIO.cleanup()
-    to0grados()
+    to0grados() 
     time.sleep(2)
     to90grados()
     #compuertaCerrado()

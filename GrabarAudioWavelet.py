@@ -11,7 +11,7 @@ FORMAT = pyaudio.paInt16
 CHANNELS = 1
 RATE = 44100
 RECORD_SECONDS = 5
-WAVE_OUTPUT_FILENAME = "audios/output.wav"
+WAVE_OUTPUT_FILENAME = "audios/tuboVacio.wav"
 micUSB = 2
 def grabar_audio():
     p = pyaudio.PyAudio()
