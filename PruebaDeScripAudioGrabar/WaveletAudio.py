@@ -51,7 +51,7 @@ plt.show()
 # Calcular la transformada wavelet
 cwtmatr = signal.cwt(audio_data, signal.ricker, np.arange(1, 50))
 # Guardar el audio grabado en un archivo WAV
-wf = wave.open("SinAire.wav", 'wb')
+wf = wave.open("AudioFondoCasaSinNada.wav", 'wb')
 wf.setnchannels(CHANNELS)
 wf.setsampwidth(audio.get_sample_size(FORMAT))
 wf.setframerate(RATE)
