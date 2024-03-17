@@ -17,6 +17,7 @@ class SoundDetector:
                              channels=self.CHANNELS,
                              rate=self.RATE,
                              input=True,
+                             input_device_index=2,
                              frames_per_buffer=self.CHUNK)
 
         print("Grabando...")
