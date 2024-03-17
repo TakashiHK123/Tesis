@@ -53,9 +53,11 @@ class SoundDetector:
         fft_freq = np.fft.fftfreq(len(data), 1 / self.RATE)
         magnitude_spectrum = np.abs(fft_data)
 
-        # Identificar frecuencias que superan la magnitud de 1 de manera eficiente
-        high_magnitude_indices = np.where(magnitude_spectrum > 0.4)[0]
-        high_magnitude_freq = fft_freq[high_magnitude_indices]
+        # Identificar frecuencias que superan la magnitud de 1
+        high_magnitude_freq = []
+        for i, mag in enumerate(magnitude_spectrum[:len(fft_freq) // 2]):
+            if mag > 1:
+                high_magnitude_freq.append(fft_freq[i])
 
         # Visualización del espectro de magnitud
         plt.figure(figsize=(8, 4))
@@ -66,8 +68,10 @@ class SoundDetector:
         plt.grid(True)
 
         # Resaltar las frecuencias que superan la magnitud de 1
-        plt.plot(high_magnitude_freq, magnitude_spectrum[high_magnitude_indices], 'ro', markersize=5)
+        for freq in high_magnitude_freq:
+            plt.axvline(x=freq, color='r', linestyle='--')
 
+        plt.xlim(0, self.RATE / 2)  # Limitar la visualización a frecuencias positivas
         plt.show()
 
         # Imprimir las frecuencias que superan la magnitud de 1
