@@ -8,17 +8,20 @@ class SoundDetector:
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 44100
-        self.CHUNK = 1024
+        self.CHUNK = 512
         self.RECORD_SECONDS = 5
         self.p = pyaudio.PyAudio()
 
-    def record_and_analyze(self, filename):
+    def record_and_analyze(self, filename, input_device_index=None):
+        if input_device_index is None:
+            input_device_index = self.get_default_input_device_index()
+
         stream = self.p.open(format=self.FORMAT,
                              channels=self.CHANNELS,
                              rate=self.RATE,
                              input=True,
-                             input_device_index=2,
-                             frames_per_buffer=self.CHUNK)
+                             frames_per_buffer=self.CHUNK,
+                             input_device_index=input_device_index)
 
         print("Grabando...")
 
@@ -50,6 +53,11 @@ class SoundDetector:
         fft_freq = np.fft.fftfreq(len(data), 1 / self.RATE)
         magnitude_spectrum = np.abs(fft_data)
 
+        # Identificar frecuencias que superan la magnitud de 1 de manera eficiente
+        high_magnitude_indices = np.where(magnitude_spectrum[:len(fft_freq)//2] > 1)[0]
+        high_magnitude_freq = fft_freq[:len(fft_freq)//2][high_magnitude_indices]
+        high_magnitude_magnitudes = magnitude_spectrum[:len(fft_freq)//2][high_magnitude_indices]
+
         # Visualización del espectro de magnitud
         plt.figure(figsize=(8, 4))
         plt.plot(fft_freq[:len(fft_freq) // 2], magnitude_spectrum[:len(fft_freq) // 2])
@@ -57,10 +65,20 @@ class SoundDetector:
         plt.ylabel('Magnitud')
         plt.title('Espectro de Magnitud')
         plt.grid(True)
+
+        # Resaltar las frecuencias que superan la magnitud de 1
+        plt.plot(high_magnitude_freq, high_magnitude_magnitudes, 'ro', markersize=5)
+
         plt.show()
+
+        # Imprimir las frecuencias que superan la magnitud de 1
+        print("Frecuencias que superan la magnitud de 1:", high_magnitude_freq)
 
         self.p.terminate()
 
+    def get_default_input_device_index(self):
+        return self.p.get_default_input_device_info()["index"]
+
 # Uso de la clase SoundDetector
 detector = SoundDetector()
-detector.record_and_analyze("grabacion.wav")
+detector.record_and_analyze("grabacion.wav", input_device_index=2)  # Cambia el valor de input_device_index según tu dispositivo
