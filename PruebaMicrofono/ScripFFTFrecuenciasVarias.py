@@ -8,7 +8,7 @@ class SoundDetector:
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 44100
-        self.CHUNK = 1024
+        self.CHUNK = 512
         self.RECORD_SECONDS = 5
         self.p = pyaudio.PyAudio()
 
@@ -53,11 +53,9 @@ class SoundDetector:
         fft_freq = np.fft.fftfreq(len(data), 1 / self.RATE)
         magnitude_spectrum = np.abs(fft_data)
 
-        # Identificar frecuencias que superan la magnitud de 0.5
-        high_magnitude_freq = []
-        for i, mag in enumerate(magnitude_spectrum[:len(fft_freq) // 2]):
-            if mag > 0.5:
-                high_magnitude_freq.append(fft_freq[i])
+        # Identificar frecuencias que superan la magnitud de 1 de manera eficiente
+        high_magnitude_indices = np.where(magnitude_spectrum > 1)[0]
+        high_magnitude_freq = fft_freq[high_magnitude_indices]
 
         # Visualización del espectro de magnitud
         plt.figure(figsize=(8, 4))
@@ -67,14 +65,13 @@ class SoundDetector:
         plt.title('Espectro de Magnitud')
         plt.grid(True)
 
-        # Resaltar las frecuencias que superan la magnitud de 0.5
-        for freq in high_magnitude_freq:
-            plt.axvline(x=freq, color='r', linestyle='--')
+        # Resaltar las frecuencias que superan la magnitud de 1
+        plt.plot(high_magnitude_freq, magnitude_spectrum[high_magnitude_indices], 'ro', markersize=5)
 
         plt.show()
 
-        # Imprimir las frecuencias que superan la magnitud de 0.5
-        print("Frecuencias que superan la magnitud de 0.5:", high_magnitude_freq)
+        # Imprimir las frecuencias que superan la magnitud de 1
+        print("Frecuencias que superan la magnitud de 1:", high_magnitude_freq)
 
         self.p.terminate()
 
