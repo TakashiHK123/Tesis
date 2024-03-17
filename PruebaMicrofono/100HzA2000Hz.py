@@ -73,7 +73,7 @@ class SoundDetector:
         plt.show()
 
         # Imprimir las frecuencias que superan la magnitud de 1 dentro del rango de frecuencia especificado
-        print("Frecuencias que superan la magnitud de 1 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
+        print("Frecuencias que superan la magnitud de 1 dentro del rango de 100 Hz a 2000 Hz:", [int(freq) for freq in high_magnitude_freq])
 
         self.p.terminate()
 
