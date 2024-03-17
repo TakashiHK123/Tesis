@@ -55,7 +55,7 @@ class SoundDetector:
             magnitude_spectrum = np.abs(fft_data)
 
             # Identificar frecuencias que superan la magnitud de 1 de manera eficiente
-            high_magnitude_indices = np.where((magnitude_spectrum > 1) & (fft_freq >= 100) & (fft_freq <= 2000))[0]
+            high_magnitude_indices = np.where((magnitude_spectrum > 0.5) & (fft_freq >= 100) & (fft_freq <= 2000))[0]
             high_magnitude_freq = fft_freq[high_magnitude_indices]
 
             # Visualización del espectro de magnitud
