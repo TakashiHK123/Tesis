@@ -69,7 +69,7 @@ class SoundDetector:
             # Resaltar las frecuencias que superan la magnitud de 1 dentro del rango de frecuencia especificado
             plt.plot(high_magnitude_freq, magnitude_spectrum[high_magnitude_indices], 'ro', markersize=5)
 
-            plt.xlim(0, self.RATE / 10)  # Limitar la visualización a frecuencias positivas
+            plt.xlim(0, self.RATE / 15)  # Limitar la visualización a frecuencias positivas
             plt.ylim(0, None)  # Limitar la visualización a magnitudes positivas
 
             # Guardar la imagen si se proporciona un nombre de archivo
