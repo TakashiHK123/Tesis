@@ -1,0 +1,120 @@
+#:kivy 1.6.0
+
+WindowManager:
+    id:wm
+	FirstWindow:
+	SecondWindow:
+
+
+<FirstWindow>:
+	name: "first"
+    id:first   
+    Label:
+        text: "First\nScreen"
+        size_hint: .1,.1
+        pos_hint: {"right":.9,"bottom":1}
+    Button:
+        size_hint: .1,.1
+        pos_hint: {"right":1,"bottom":1}
+        text: "Next Screen"
+        #font_size: 16
+        on_release: 
+            app.root.current = "second"
+            root.manager.transition.direction = "left"
+    Button:
+        pos_hint:{"right":1,"top":0.2}
+        size_hint: .1,.1
+        text: "Borrar\nGrafico"
+        on_press:app.borrarGrafico()
+
+    PrimerWidget:
+    SegundoWidget:
+
+
+<SecondWindow>:
+	name: "second"
+
+
+    Label:
+        text: "Second\nScreen"
+        size_hint: .1,.1
+        pos_hint: {"right":.9,"bottom":1}
+    Button:
+        size_hint: .1,.1
+        pos_hint: {"right":1,"bottom":1}
+        text: "Go Back"
+        on_release: 
+            app.root.current = "first"
+            root.manager.transition.direction = "right"
+    TercerWidget:
+
+<PrimerWidget>   
+
+    Button:
+        center_x: root.width* 1/8
+        center_y: root.height /4*3.5
+        size: root.width / 4.1,root.height / 8
+        text: "Cerrar Interfaz"
+        on_press:app.stop()
+
+    Button:
+        center_x: root.width* 3/8
+        center_y: root.height /4*3.5
+        size: root.width / 4.1,root.height / 8
+        id: hulk
+        text: app.botonScript #root.text
+        on_press: 
+            #root.callback()
+            #app.botonScript="Cerrando Script"
+            app.iniciarPrograma()
+
+
+<SegundoWidget>
+    
+    Label:
+        center_x: root.width / 4 
+        center_y: root.height /4*3.85
+        size: root.width / 8,root.height / 8
+        id: loki
+        text: root.MosHembra
+
+    Label:
+        center_x: root.width / 4 *3
+        center_y: root.height /4*3.85
+        size: root.width / 8,root.height / 8
+        id: lokis
+        text: root.MosMacho
+
+    Button:
+        
+        center_x: root.width / 4 *3
+        center_y: root.height /4*3.5
+        size: root.width / 2.05,root.height / 8
+        text: root.text
+        on_press: root.callback()
+        #on_release:app.graficar()
+        #on_state:app.graficar()
+        #on_release: print("ahhh")
+        #on_state: print("my current state is {}".format(self.state))
+
+<TercerWidget>
+
+    canvas:
+        
+        Rectangle:
+            #source: 'tinky.jpeg'
+            id:camara
+            source:app.imagen
+            pos: root.width *0.01,root.height*0.1
+            #size: root.width*0.6,root.height*0.6
+            size:1080/1.2,700/1.2
+            #pantalla 240x320
+
+
+    # Button:
+        
+    #     center_x: root.width *0.8
+    #     center_y: root.height *0.5
+    #     size: root.width / 8,root.height / 8
+    #     text: root.text
+    #     on_press: root.callback()
