@@ -12,27 +12,40 @@ class SoundDetector:
 
     def record_and_analyze(self, filename, save_plot_filename=None, input_device_index=None, repeat=False):
         while True:
-            # Abre el dispositivo de audio
             if input_device_index is None:
                 input_device_index = self.get_default_input_device_index()
 
-            with alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, input_device=input_device_index) as stream:
-                stream.setchannels(self.CHANNELS)
-                stream.setrate(self.RATE)
-                stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-                stream.setperiodsize(self.CHUNK)
+            stream = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=input_device_index)
+            stream.setchannels(1)
+            stream.setrate(44100)
+            stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+            stream.setperiodsize(512)
 
-                print("Grabando...")
+            print("Grabando...")
 
-                frames = []
-                data = []
+            frames = []
+            data = []
 
-                for i in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
-                    length, audio_data = stream.read()
-                    frames.append(audio_data)
-                    data.extend(np.frombuffer(audio_data, dtype=np.int16))
+            for i in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
+                length, audio_data = stream.read()
+                frames.append(audio_data)
+                data.extend(np.frombuffer(audio_data, dtype=np.int16))
 
-                print("Fin de la grabación.")
+            print("Fin de la grabación.")
+
+            # Tu código de procesamiento aquí
+
+            # Cerrar el dispositivo de audio
+            stream.close()
+
+            # Tu código de guardado aquí
+
+            # Tu código de visualización aquí
+
+            # Tu código de impresión aquí
+
+            if not repeat:
+                break
 
             # Guardar los datos de audio en un archivo WAV
             wf = wave.open(filename, 'wb')
