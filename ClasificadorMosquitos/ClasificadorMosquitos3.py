@@ -207,11 +207,6 @@ def clasificar_frecuencia(high_magnitude_freq):
     try:
         print("high_magnitude_freq:", high_magnitude_freq)
 
-        # Verificar si high_magnitude_freq es una lista
-        if not isinstance(high_magnitude_freq, list):
-            print("No es una lista.")
-            return None
-
         # Verificar si la lista de frecuencias no está vacía
         if not high_magnitude_freq:
             print("Lista vacía.")
