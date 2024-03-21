@@ -353,8 +353,8 @@ class SoundDetector:
                     os.makedirs(datos_folder)  # Crea la carpeta "datos" si no existe
 
                 # Crear la subcarpeta con la fecha actual si no existe
-                self.LOCALDATE = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-                carpeta_completa = os.path.join(datos_folder, self.LOCALDATE)
+                subcarpeta_fecha = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                carpeta_completa = os.path.join(datos_folder, subcarpeta_fecha)
                 if not os.path.exists(carpeta_completa):
                     os.makedirs(carpeta_completa)  # Crea la subcarpeta con la fecha actual si no existe
 
@@ -367,6 +367,7 @@ class SoundDetector:
                 os.makedirs(carpeta_completa, exist_ok=True)  # Crear la carpeta si no existe
                 os.rename(filename, filename_audio)
                 print("Se guardan los audios y imagen de la frecuencia")
+                self.LOCALDATE = subcarpeta_fecha
             # Imprimir las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
             print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
             return high_magnitude_freq
@@ -440,7 +441,7 @@ if __name__ == '__main__':
                     GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
                     time.sleep(2)
 
-                    if(detector.obtener_fecha_guardada()!=None):
+                    if(detector.obtener_fecha_guardada() is not None):
                         fechaGuardada = detector.obtener_fecha_guardada()
                         capturar_foto(fechaGuardada,nombreMosquito)
                         print('Se guarda la imagen del mosquito')
