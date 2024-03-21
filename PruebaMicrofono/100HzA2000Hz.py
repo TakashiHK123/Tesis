@@ -56,8 +56,10 @@ class SoundDetector:
             magnitude_spectrum = np.abs(fft_data)
 
             # Identificar frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
-            high_magnitude_indices = np.where((magnitude_spectrum > 0.2) & (fft_freq >= 100) & (fft_freq <= 2000))[0]
+            high_magnitude_indices = np.where((magnitude_spectrum > 0.2) & (fft_freq >= 200) & (fft_freq <= 1500))
             high_magnitude_freq = fft_freq[high_magnitude_indices]
+            magnitude_spectrum = magnitude_spectrum[high_magnitude_indices]
+
 
             # Visualización del espectro de magnitud
             plt.figure(figsize=(8, 4))
@@ -96,8 +98,8 @@ class SoundDetector:
                 os.rename(filename, filename_audio)
 
             # Imprimir las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
-            print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
-            return high_magnitude_freq
+            print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", magnitude_spectrum)
+            return magnitude_spectrum
             if not repeat:
                 break
 
