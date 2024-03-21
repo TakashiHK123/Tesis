@@ -15,6 +15,8 @@ import os
 import cv2
 from collections import Counter
 import wave
+import shutil
+
 
 GPIO.cleanup()
 # Inicializar el gráfico
