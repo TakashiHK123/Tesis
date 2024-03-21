@@ -195,25 +195,37 @@ def deteccionMosquito():
             estado = 1
 
 
+from collections import Counter
+
 def clasificar_frecuencia(high_magnitude_freq):
-    # Rangos de frecuencia para cada clasificación
-    rangos_clasificacion = {
-        "aedes_albopictus_macho": (450, 550),
-        "aedes_albopictus_hembra": (730, 880),
-        "culex_pipiens_macho": (360, 480),
-        "culex_pipiens": (550, 730)
-    }
+    try:
+        # Frecuencias correspondientes a cada especie
+        rangos = {
+            "aedes_albopictus_macho": (450, 550),
+            "aedes_albopictus_hembra": (730, 880),
+            "culex_pipiens_macho": (360, 480),
+            "culex_pipiens": (550, 730)
+        }
 
-    # Contar frecuencias dentro de los rangos específicos
-    conteo_frecuencias = Counter()
-    for freq in high_magnitude_freq:
-        for clasificacion, rango in rangos_clasificacion.items():
-            if rango[0] <= freq <= rango[1]:
-                conteo_frecuencias[clasificacion] += 1
+        # Contador para contar la frecuencia de cada especie
+        conteo_especies = Counter()
 
-    # Determinar la clasificación con mayor probabilidad
-    clasificacion_mas_probable = conteo_frecuencias.most_common(1)
-    return clasificacion_mas_probable[0][0] if clasificacion_mas_probable else None
+        # Iterar sobre las frecuencias y clasificarlas
+        for freq in high_magnitude_freq:
+            for especie, rango in rangos.items():
+                if rango[0] <= freq <= rango[1]:
+                    conteo_especies[especie] += 1
+
+        # Obtener la especie con mayor frecuencia
+        especie_mas_comun = conteo_especies.most_common(1)
+        if especie_mas_comun:
+            return especie_mas_comun[0][0]  # Devuelve la especie más común
+        else:
+            return None  # Devuelve None si no se detecta ninguna especie dentro de los rangos
+    except Exception as e:
+        print("Error:", e)
+        return None  # Devuelve None si ocurre algún error durante el proceso de clasificación
+
 
 def capturar_foto(carpeta_fecha_hora,nombre):
     cap = cv2.VideoCapture(puertoCamara)  # Es el puerto donde se encuentra conectada la cámara web por USB
