@@ -144,8 +144,8 @@ class SoundDetector:
                 os.rename(filename, filename_audio)
 
             # Imprimir las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
-            print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", magnitude_spectrum)
-            return magnitude_spectrum
+            print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
+            return high_magnitude_freq
             if not repeat:
                 break
 
