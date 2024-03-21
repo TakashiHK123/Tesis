@@ -277,7 +277,7 @@ class SoundDetector:
         self.CHANNELS = 1
         self.RATE = 44100
         self.CHUNK = 512
-        self.RECORD_SECONDS = 5
+        self.RECORD_SECONDS = 3
         self.LOCALDATE = None
 
     def obtener_fecha_guardada(self):
@@ -327,7 +327,6 @@ class SoundDetector:
             # Identificar frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
             high_magnitude_indices = np.where((magnitude_spectrum > 0.5) & (fft_freq >= 200) & (fft_freq <= 1500))[0]
             high_magnitude_freq = fft_freq[high_magnitude_indices]
-            magnitude_spectrum = magnitude_spectrum[high_magnitude_indices]
 
             # Visualización del espectro de magnitud
             plt.figure(figsize=(8, 4))
