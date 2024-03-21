@@ -145,7 +145,7 @@ class SoundDetector:
 
             # Imprimir las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
             print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
-            return high_magnitude_freq
+            return fft_freq[:len(fft_freq) // 2]
             if not repeat:
                 break
 
