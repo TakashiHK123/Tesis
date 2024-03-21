@@ -10,7 +10,7 @@ import pyudev
 import matplotlib.pyplot as plt
 from scipy.fftpack import fft, ifft
 from scipy.io.wavfile import write
-import datetime
+from datetime import datetime
 import os
 import cv2
 from collections import Counter
