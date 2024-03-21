@@ -277,10 +277,10 @@ class SoundDetector:
                 input_device_index = self.get_default_input_device_index()
 
             stream = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=input_device_index)
-            stream.setchannels(1)
-            stream.setrate(44100)
+            stream.setchannels(self.CHANNELS)
+            stream.setrate(self.RATE)
             stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
-            stream.setperiodsize(512)
+            stream.setperiodsize(self.CHUNK)
 
             print("Grabando...")
 
@@ -362,7 +362,7 @@ class SoundDetector:
 
     def get_default_input_device_index(self):
         # Devuelve el primer índice de dispositivo
-        return 0
+        return 2
 
 
 def mapear_clasificacion(clasificacion):
