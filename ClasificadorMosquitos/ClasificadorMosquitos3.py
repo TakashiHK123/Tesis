@@ -336,7 +336,7 @@ class SoundDetector:
             # Guardar la imagen si se proporciona un nombre de archivo
             # Guardar la imagen si se proporciona un nombre de archivo
             if save_plot_filename:
-                datos_folder = carpetaDatos
+                datos_folder = "datos"
                 if not os.path.exists(datos_folder):
                     os.makedirs(datos_folder)  # Crea la carpeta "datos" si no existe
 
@@ -418,6 +418,7 @@ if __name__ == '__main__':
                 high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=puertoMicrofono,
                                             repeat=False)  # Cambia el valor de input_device_index según tu dispositivo
                 clasificacion = clasificar_frecuencia(high_magnitude_freq)
+                print(clasificacion)
                 nombreMosquito=imprimir_clasificacion(clasificacion)
                 compuertaPosicion = mapear_clasificacion(clasificacion)
                 if compuertaPosicion != 0:
