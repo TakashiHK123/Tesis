@@ -310,9 +310,6 @@ class SoundDetector:
             print("Fin de la grabación.")
             stream.close()
 
-            if not repeat:
-                break
-
             # Guardar los datos de audio en un archivo WAV
             wf = wave.open(filename, 'wb')
             wf.setnchannels(self.CHANNELS)
@@ -348,6 +345,7 @@ class SoundDetector:
 
             # Guardar la imagen si se proporciona un nombre de archivo
             # Guardar la imagen si se proporciona un nombre de archivo
+            print(save_plot_filename)
             if save_plot_filename:
                 datos_folder = "datos"
                 if not os.path.exists(datos_folder):

@@ -40,15 +40,6 @@ class SoundDetector:
             # Cerrar el dispositivo de audio
             stream.close()
 
-            # Tu código de guardado aquí
-
-            # Tu código de visualización aquí
-
-            # Tu código de impresión aquí
-
-            if not repeat:
-                break
-
             # Guardar los datos de audio en un archivo WAV
             wf = wave.open(filename, 'wb')
             wf.setnchannels(self.CHANNELS)
