@@ -14,6 +14,7 @@ import datetime
 import os
 import cv2
 from collections import Counter
+import wave
 
 GPIO.cleanup()
 # Inicializar el gráfico
