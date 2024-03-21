@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import wave
 import os
+from collections import Counter
 from datetime import datetime
 
 def imprimir_clasificacion(clasificacion):
