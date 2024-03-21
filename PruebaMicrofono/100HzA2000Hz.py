@@ -103,9 +103,15 @@ class SoundDetector:
             magnitude_spectrum = np.abs(fft_data)
 
             # Identificar frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
-            high_magnitude_indices = np.where((magnitude_spectrum > 0.5) & (fft_freq >= 200) & (fft_freq <= 1500))[0]
+            high_magnitude_indices = np.where((magnitude_spectrum > 1) & (fft_freq >= 200) & (fft_freq <= 1000))[0]
             high_magnitude_freq = fft_freq[high_magnitude_indices]
 
+            # Calcular la frecuencia con la mayor magnitud dentro del rango
+            if high_magnitude_freq.size > 0:
+                max_magnitude_index = np.argmax(magnitude_spectrum[high_magnitude_indices])
+                max_magnitude_freq = high_magnitude_freq[max_magnitude_index]
+            else:
+                max_magnitude_freq = None
 
             # Visualización del espectro de magnitud
             plt.figure(figsize=(8, 4))
@@ -145,7 +151,8 @@ class SoundDetector:
 
             # Imprimir las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
             print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
-            return fft_freq[:len(fft_freq) // 2]
+            return max_magnitude_freq
+            # return high_magnitude_freq
             if not repeat:
                 break
 
@@ -155,6 +162,7 @@ class SoundDetector:
 
 # Uso de la clase SoundDetector
 detector = SoundDetector()
+high_magnitude_freq = None
 high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=2, repeat=True)  # Cambia el valor de input_device_index según tu dispositivo
 clasificacion = clasificar_frecuencia(high_magnitude_freq)
 nombreMosquito=imprimir_clasificacion(clasificacion)
