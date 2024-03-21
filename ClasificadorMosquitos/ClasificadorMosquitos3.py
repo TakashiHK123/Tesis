@@ -303,11 +303,12 @@ class SoundDetector:
             data = []
 
             for i in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
+                print("-.-")
                 length, audio_data = stream.read()
                 frames.append(audio_data)
                 data.extend(np.frombuffer(audio_data, dtype=np.int16))
 
-
+            print("Fin de la grabación.")
             stream.close()
 
             if not repeat:
@@ -321,7 +322,6 @@ class SoundDetector:
             wf.writeframes(b''.join(frames))
             wf.close()
 
-            print("Fin de la grabación.")
             # Procesamiento de los datos grabados
             data = np.array(data)
 
@@ -407,6 +407,7 @@ if __name__ == '__main__':
     to0grados()
     time.sleep(2)
     GPIO.output(pinSuccionador, GPIO.LOW)
+    detector = SoundDetector()
     try:
         while not hasRun:
             print('-------Inicio Ciclo')
@@ -428,9 +429,7 @@ if __name__ == '__main__':
             estadoDeteccion = False
             while not estadoDeteccion:
                 # Uso de la clase SoundDetector
-                detector = SoundDetector()
-                high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=puertoMicrofono,
-                                            repeat=False)  # Cambia el valor de input_device_index según tu dispositivo
+                high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=puertoMicrofono, repeat=False)  # Cambia el valor de input_device_index según tu dispositivo
                 print(high_magnitude_freq)
                 clasificacion = clasificar_frecuencia(high_magnitude_freq)
                 print(clasificacion)
