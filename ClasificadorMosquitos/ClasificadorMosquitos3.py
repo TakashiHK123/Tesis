@@ -303,7 +303,6 @@ class SoundDetector:
             data = []
 
             for i in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
-                print("-.-")
                 length, audio_data = stream.read()
                 frames.append(audio_data)
                 data.extend(np.frombuffer(audio_data, dtype=np.int16))
