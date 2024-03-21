@@ -327,7 +327,7 @@ class SoundDetector:
             magnitude_spectrum = np.abs(fft_data)
 
             # Identificar frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
-            high_magnitude_indices = np.where((magnitude_spectrum > 0.2) & (fft_freq >= 100) & (fft_freq <= 2000))[0]
+            high_magnitude_indices = np.where((magnitude_spectrum > 0.2) & (fft_freq >= 300) & (fft_freq <= 1000))[0]
             high_magnitude_freq = fft_freq[high_magnitude_indices]
 
             # Visualización del espectro de magnitud
@@ -397,7 +397,7 @@ def imprimir_clasificacion(clasificacion):
         return clasificacion
     else:
         print("No se pudo determinar la clasificación.")
-        return "No_se_determino"
+        return None
 
 
 
@@ -433,6 +433,11 @@ if __name__ == '__main__':
                 clasificacion = clasificar_frecuencia(high_magnitude_freq)
                 print(clasificacion)
                 nombreMosquito=imprimir_clasificacion(clasificacion)
+                if(nombreMosquito is None):
+                    carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
+                    if os.path.exists(carpeta_fecha_actual):
+                        shutil.rmtree(carpeta_fecha_actual)
+                        print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
                 compuertaPosicion = mapear_clasificacion(clasificacion)
                 if compuertaPosicion != 0:
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
