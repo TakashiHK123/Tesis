@@ -157,4 +157,3 @@ detector = SoundDetector()
 high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=2, repeat=True)  # Cambia el valor de input_device_index según tu dispositivo
 clasificacion = clasificar_frecuencia(high_magnitude_freq)
 nombreMosquito=imprimir_clasificacion(clasificacion)
-compuertaPosicion = mapear_clasificacion(clasificacion)
