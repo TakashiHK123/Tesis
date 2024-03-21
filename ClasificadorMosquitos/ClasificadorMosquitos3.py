@@ -432,12 +432,12 @@ if __name__ == '__main__':
                 clasificacion = clasificar_frecuencia(high_magnitude_freq)
                 print(clasificacion)
                 nombreMosquito=imprimir_clasificacion(clasificacion)
+                compuertaPosicion = mapear_clasificacion(clasificacion)
                 if(nombreMosquito is None):
                     carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
                     if os.path.exists(carpeta_fecha_actual):
                         shutil.rmtree(carpeta_fecha_actual)
                         print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
-                compuertaPosicion = mapear_clasificacion(clasificacion)
                 if compuertaPosicion != 0:
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
                     time.sleep(1)

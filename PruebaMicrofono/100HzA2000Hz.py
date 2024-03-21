@@ -5,6 +5,52 @@ import wave
 import os
 from datetime import datetime
 
+def imprimir_clasificacion(clasificacion):
+    if clasificacion:
+        print("La clasificación más probable es:", clasificacion)
+        return clasificacion
+    else:
+        print("No se pudo determinar la clasificación.")
+        return None
+
+
+def clasificar_frecuencia(high_magnitude_freq):
+    try:
+        high_magnitude_freq = [freq for freq in high_magnitude_freq if freq is not None]
+        print("high_magnitude_freq:", high_magnitude_freq)
+
+        # Verificar si la lista de frecuencias no está vacía
+        if not high_magnitude_freq:
+            print("Lista vacía.")
+            return None
+
+        # Frecuencias correspondientes a cada especie
+        rangos = {
+            "aedes_albopictus_macho": (450, 550),
+            "aedes_albopictus_hembra": (730, 880),
+            "culex_pipiens_macho": (360, 480),
+            "culex_pipiens": (550, 730)
+        }
+
+        # Contador para contar la frecuencia de cada especie
+        conteo_especies = Counter()
+
+        # Iterar sobre las frecuencias y clasificarlas
+        for freq in high_magnitude_freq:
+            for especie, rango in rangos.items():
+                if rango[0] <= freq <= rango[1]:
+                    conteo_especies[especie] += 1
+
+        # Obtener la especie con mayor frecuencia
+        especie_mas_comun = conteo_especies.most_common(1)
+        if especie_mas_comun:
+            return especie_mas_comun[0][0]  # Devuelve la especie más común
+        else:
+            return None  # Devuelve None si no se detecta ninguna especie dentro de los rangos
+    except Exception as e:
+        print("Error:", e)
+        return None  # Devuelve None si ocurre algún error durante el proceso de clasificación
+
 class SoundDetector:
     def __init__(self):
         self.CHANNELS = 1
@@ -108,4 +154,7 @@ class SoundDetector:
 
 # Uso de la clase SoundDetector
 detector = SoundDetector()
-detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=2, repeat=True)  # Cambia el valor de input_device_index según tu dispositivo
+high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=2, repeat=True)  # Cambia el valor de input_device_index según tu dispositivo
+clasificacion = clasificar_frecuencia(high_magnitude_freq)
+nombreMosquito=imprimir_clasificacion(clasificacion)
+compuertaPosicion = mapear_clasificacion(clasificacion)
