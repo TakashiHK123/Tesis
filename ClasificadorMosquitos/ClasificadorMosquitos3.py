@@ -229,7 +229,6 @@ def clasificar_frecuencia(high_magnitude_freq):
 
 def capturar_foto(carpeta_fecha_hora,nombre):
     cap = cv2.VideoCapture(puertoCamara)  # Es el puerto donde se encuentra conectada la cámara web por USB
-
     # Verificar si la cámara está disponible
     if not cap.isOpened():
         print("Error: No se puede acceder a la cámara. ¿Está conectada correctamente?")
@@ -417,6 +416,7 @@ if __name__ == '__main__':
                 # Uso de la clase SoundDetector
                 high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=puertoMicrofono,
                                             repeat=False)  # Cambia el valor de input_device_index según tu dispositivo
+                print(high_magnitude_freq)
                 clasificacion = clasificar_frecuencia(high_magnitude_freq)
                 print(clasificacion)
                 nombreMosquito=imprimir_clasificacion(clasificacion)
