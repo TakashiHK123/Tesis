@@ -7,12 +7,13 @@ import scipy.io.wavfile as wav
 import alsaaudio
 import time
 import pyudev
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from scipy.fftpack import fft, ifft
 from scipy.io.wavfile import write
 import datetime
 import os
 import cv2
+from collections import Counter
 
 GPIO.cleanup()
 # Inicializar el gráfico
@@ -31,6 +32,7 @@ frecuencia_muestreo = 44100  # Establecer la frecuencia de muestreo a 42.667 kHz
 tiempoDelay = 1.5  # El tiempo necesario para no detectar un falso negativo
 puertoCamara = 0
 puertoMicrofono = 2
+carpetaDatos = "datos"
 # Use BCM GPIO references
 # Instead of physical pin numbers
 GPIO.setmode(GPIO.BCM)
@@ -193,156 +195,28 @@ def deteccionMosquito():
             estado = 1
 
 
-def deteccionMosquitoDentroDeLaCapsula():
-    estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
-    while True:
-        # Lee el valor del pin GPIO
-        value = GPIO.input(pin_sensor_selector)
+def clasificar_frecuencia(high_magnitude_freq):
+    # Rangos de frecuencia para cada clasificación
+    rangos_clasificacion = {
+        "aedes_albopictus_macho": (450, 550),
+        "aedes_albopictus_hembra": (730, 880),
+        "culex_pipiens_macho": (360, 480),
+        "culex_pipiens": (550, 730)
+    }
 
-        if value == GPIO.HIGH:
-            estado = 1
-        else:
-            if estado == 1:
-                print('Mosquito ingresado dentro de la capsula')
-                estado = 0
-                break
-            # Realiza acciones específicas para objetos negros
+    # Contar frecuencias dentro de los rangos específicos
+    conteo_frecuencias = Counter()
+    for freq in high_magnitude_freq:
+        for clasificacion, rango in rangos_clasificacion.items():
+            if rango[0] <= freq <= rango[1]:
+                conteo_frecuencias[clasificacion] += 1
 
+    # Determinar la clasificación con mayor probabilidad
+    clasificacion_mas_probable = conteo_frecuencias.most_common(1)
+    return clasificacion_mas_probable[0][0] if clasificacion_mas_probable else None
 
-def es_dispositivo_usb(dispositivo):
-    # Verificar si el directorio del dispositivo contiene "usb"
-    return "usb" in dispositivo.device_path
-
-
-def obtener_dispositivos_usb():
-    context = pyudev.Context()
-    dispositivos_usb = []
-
-    for dispositivo in context.list_devices(subsystem='sound'):
-        # print("Atributos disponibles para el dispositivo:")
-        for atributo in dir(dispositivo.attributes):
-            if not atributo.startswith('_'):
-                valor = getattr(dispositivo.attributes, atributo)
-                # print(f"{atributo}: {valor}")
-
-        devtype = dispositivo.attributes.get('DEVTYPE')
-        id_bus = dispositivo.attributes.get('ID_BUS')
-
-        # print(f"devtype: {devtype}")
-        # print(f"id_bus: {id_bus}")
-
-        # Comprobamos si el dispositivo está en el bus USB
-        if es_dispositivo_usb(dispositivo):
-            dispositivos_usb.append(dispositivo.device_node)
-            print("Este es un dispositivo USB de audio.")
-            print(f'{dispositivo.device_node} devType:{devtype}')
-        else:
-            print("Este no es un dispositivo USB de audio.")
-
-        print("\n---\n")
-
-    return dispositivos_usb
-
-
-def configurar_mic():
-    dispositivos_usb = obtener_dispositivos_usb()
-    if not dispositivos_usb:
-        print("No se encontraron dispositivos USB.")
-        return None
-    # print("Dispositivos USB encontrados:")
-    # for i, dispositivo in enumerate(dispositivos_usb, 1):
-    # print(f'{i}.{dispositivo}')
-
-    seleccion = int(2)
-
-    if 1 <= seleccion <= len(dispositivos_usb):
-
-        # Configurar el micrófono seleccionado con 1 canal (mono)
-        mic_configurado = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL,
-                                        cardindex=puertoMicrofono)  # Reemplaza 2 con tu cardindex
-        mic_configurado.setchannels(1)  # Establecer el número de canales a 1 (mono)
-        mic_configurado.setrate(frecuencia_muestreo)  # Establecer la frecuencia de muestreo a 44.1 kHz
-        mic_configurado.setformat(alsaaudio.PCM_FORMAT_S16_LE)  # Establecer el formato de audio a 16 bits little-endian
-
-        # Intenta con un tamaño de periodo más pequeño
-        mic_configurado.setperiodsize(longitud_senal)  # Establecer el tamaño del periodo
-
-        # Capturar datos
-        return mic_configurado
-    else:
-        print("Seleccion no valida")
-        return None
-
-
-def detectar_frecuencia_usb(capturador):
-    # Aplicar la Transformada Rapida de Fourier (FFT)
-
-    umbral_db = -50
-    # plt.show(block=False)
-    # frecuencias = np.fft.fftfreq(longitud_senal, 1 / frecuencia_muestreo)
-    # amplitudes_iniciales = np.zeros(longitud_senal)
-    # line, = ax.plot(frecuencias, amplitudes_iniciales)
-    detected = True
-    try:
-        while detected:
-
-            # Leer datos del microfono USB
-            longitud_buffer = len(capturador.read()[1])
-            longitud_buffer = longitud_buffer - (longitud_buffer % 2)
-
-            # Procesar los datos capturados
-            datos = np.frombuffer(capturador.read()[1][:longitud_buffer], dtype=np.int16)
-            # Realizar la FFT
-            # Calcular nivel de decibelios RMS
-            if np.any(datos) == False:
-                print('El valor del microfono es zero')
-            else:
-                if datos is not None:
-                    rms_level_db = 20 * np.log10(np.sqrt(np.mean(datos ** 2)))
-                    # Calcular las frecuencias correspondientes
-                    fft_resultado = np.fft.fft(datos)
-
-                    # Calcular las frecuencias correspondientes
-                    frecuencias = np.fft.fftfreq(longitud_senal, 1 / frecuencia_muestreo)
-
-                    # Encontrar el indice de la frecuencia dominante
-                    indice_frecuencia_dominante = np.argmax(np.abs(fft_resultado))
-
-                    # Obtener la frecuencia dominante en Hz
-                    # Actualizar la línea en el gráfico
-                    # line.set_xdata(np.abs(frecuencias))
-                    # line.set_ydata(fft_resultado)
-                    # print(np.abs(fft_resultado))
-                    # plt.draw()
-                    # Actualizar el gráfico
-                    # plt.pause(0.001)  # Añadi un pequeño retraso para permitir la actualización de la interfaz gráfica
-                    frecuencia_dominante = frecuencias[indice_frecuencia_dominante]
-                    if frecuencia_dominante != 0 and frecuencia_dominante >= 300 and rms_level_db > umbral_db and frecuencia_dominante <= 1000:
-                        print(f'Decibelios:{rms_level_db}')
-                        print(f'Frecuencia: {frecuencia_dominante} Hz')
-                        time.sleep(0.01)
-                        # signal_reconstruida = ifft(fft_resultado)
-                        # fft_resultado_padded = np.pad(fft_resultado, (0, frecuencia_muestreo - len(fft_resultado)))
-                        # Reconstruir la señal en el dominio del tiempo utilizando la IFFT
-                        # signal_reconstruida = np.real(ifft(fft_resultado_padded))
-                        signal_reconstruida = capturador.read()[1]
-                        detected = False
-                        return [frecuencia_dominante, signal_reconstruida]
-    except KeyboardInterrupt:
-        pass
-
-
-def selectorCompuertaByRangoFrecuencia(frecuencia, minimo, maximo, compuerta, detectado):
-    if frecuencia >= minimo and frecuencia <= maximo:
-        print(
-            f'Se a detectado un mosquito entre los rangos de frecuencia:{minimo} - {maximo} para compuerta:{compuerta}')
-        # steps(grados_a_pasos(grados*compuerta))# parcourt un tour dans le sens horaire
-        return compuerta
-    return detectado
-
-
-def capturar_foto(carpeta_mosquitos):
-    cap = cv2.VideoCapture(puertoCamara)  # es el puerto en donde se encuentra conectado la camara web por usb
+def capturar_foto(carpeta_fecha_hora,nombre):
+    cap = cv2.VideoCapture(puertoCamara)  # Es el puerto donde se encuentra conectada la cámara web por USB
 
     # Verificar si la cámara está disponible
     if not cap.isOpened():
@@ -353,14 +227,9 @@ def capturar_foto(carpeta_mosquitos):
     # cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
     # cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
 
-    # Crear la carpeta del mosquito si no existe
-    if not os.path.exists(carpeta_mosquitos):
-        os.makedirs(carpeta_mosquitos)
-    # carpeta_mosquitos = os.path.join(nombre_archivo, nombre_carpeta_mosquitos)
-
-    # Ruta completa de la imagen dentro de la carpeta 'imagenes'
-    nombre_archivo = 'imagen.jpg'
-    ruta_imagen = os.path.join(carpeta_mosquitos, nombre_archivo)
+    # Ruta completa de la imagen dentro de la carpeta de la fecha actual
+    nombre_archivo = nombre+'.jpg'
+    ruta_imagen = os.path.join(carpetaDatos, carpeta_fecha_hora, nombre_archivo)
 
     tiempo_inicial = time.time()
     brillo_maximo = 0
@@ -371,44 +240,148 @@ def capturar_foto(carpeta_mosquitos):
             frame_enfocado = cv2.GaussianBlur(frame, (5, 5), 0)
             # Calcular el brillo de la imagen
             brillo = cv2.mean(frame_enfocado)[0]
-            # Guardar la imagen con el brillo maximo
+            # Guardar la imagen con el brillo máximo
             if brillo > brillo_maximo:
                 brillo_maximo = brillo
                 frame_maximo = frame_enfocado.copy()
 
     cv2.imwrite(ruta_imagen, frame_maximo)
     cap.release()
+class SoundDetector:
+    def __init__(self):
+        self.CHANNELS = 1
+        self.RATE = 44100
+        self.CHUNK = 512
+        self.RECORD_SECONDS = 5
+        self.LOCALDATE = None
+
+    def obtener_fecha_guardada(self):
+        if(self.LOCALDATE!=None):
+            return self.LOCALDATE
+        else:
+            return None
+    def record_and_analyze(self, filename, save_plot_filename=None, input_device_index=None, repeat=False):
+        while True:
+            if input_device_index is None:
+                input_device_index = self.get_default_input_device_index()
+
+            stream = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=input_device_index)
+            stream.setchannels(1)
+            stream.setrate(44100)
+            stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+            stream.setperiodsize(512)
+
+            print("Grabando...")
+
+            frames = []
+            data = []
+
+            for i in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
+                length, audio_data = stream.read()
+                frames.append(audio_data)
+                data.extend(np.frombuffer(audio_data, dtype=np.int16))
 
 
-def guardar_datos(numero_mosquito, audio_data, frecuencia_muestreo):
-    # Obtener la fecha y hora actual para el nombre de archivo
-    formato_fecha_hora = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-    # Crear la ruta base
-    ruta_carpeta = f'datos/mosquitos{numero_mosquito}_{formato_fecha_hora}'
+            stream.close()
 
-    # Crear la carpeta del mosquito si no existe
-    if not os.path.exists(ruta_carpeta):
-        os.makedirs(ruta_carpeta)
-    # Guardar el archivo de audio
-    nombre_audio = f'{ruta_carpeta}/audio.wav'
-    write(nombre_audio, frecuencia_muestreo, audio_data)
+            if not repeat:
+                break
 
-    # Capturar una foto y guardarla
-    ruta_carpeta = f'{ruta_carpeta}'
-    capturar_foto(ruta_carpeta)
+            # Guardar los datos de audio en un archivo WAV
+            wf = wave.open(filename, 'wb')
+            wf.setnchannels(self.CHANNELS)
+            wf.setsampwidth(2)  # 2 bytes para formato PCM_FORMAT_S16_LE
+            wf.setframerate(self.RATE)
+            wf.writeframes(b''.join(frames))
+            wf.close()
+
+            print("Fin de la grabación.")
+            # Procesamiento de los datos grabados
+            data = np.array(data)
+
+            fft_data = np.fft.fft(data)
+            fft_freq = np.fft.fftfreq(len(data), 1 / self.RATE)
+            magnitude_spectrum = np.abs(fft_data)
+
+            # Identificar frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
+            high_magnitude_indices = np.where((magnitude_spectrum > 0.2) & (fft_freq >= 100) & (fft_freq <= 2000))[0]
+            high_magnitude_freq = fft_freq[high_magnitude_indices]
+
+            # Visualización del espectro de magnitud
+            plt.figure(figsize=(8, 4))
+            plt.plot(fft_freq[:len(fft_freq) // 2], magnitude_spectrum[:len(fft_freq) // 2])
+            plt.xlabel('Frecuencia (Hz)')
+            plt.ylabel('Magnitud')
+            plt.title('Espectro de Magnitud')
+            plt.grid(True)
+
+            # Resaltar las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
+            plt.plot(high_magnitude_freq, magnitude_spectrum[high_magnitude_indices], 'ro', markersize=5)
+
+            plt.xlim(0, self.RATE / 15)  # Limitar la visualización a frecuencias positivas
+            plt.ylim(0, None)  # Limitar la visualización a magnitudes positivas
+
+            # Guardar la imagen si se proporciona un nombre de archivo
+            # Guardar la imagen si se proporciona un nombre de archivo
+            if save_plot_filename:
+                datos_folder = carpetaDatos
+                if not os.path.exists(datos_folder):
+                    os.makedirs(datos_folder)  # Crea la carpeta "datos" si no existe
+
+                # Crear la subcarpeta con la fecha actual si no existe
+                self.LOCALDATE = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                carpeta_completa = os.path.join(datos_folder, self.LOCALDATE)
+                if not os.path.exists(carpeta_completa):
+                    os.makedirs(carpeta_completa)  # Crea la subcarpeta con la fecha actual si no existe
+
+                # Guardar la imagen dentro de la carpeta con la fecha actual
+                filename_plot = os.path.join(carpeta_completa, save_plot_filename)
+                plt.savefig(filename_plot)
+
+                # Guardar el archivo de audio dentro de la carpeta con la fecha y hora actual
+                filename_audio = os.path.join(carpeta_completa, filename)
+                os.makedirs(carpeta_completa, exist_ok=True)  # Crear la carpeta si no existe
+                os.rename(filename, filename_audio)
+                print("Se guardan los audios y imagen de la frecuencia")
+            # Imprimir las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
+            print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
+            return high_magnitude_freq
+            if not repeat:
+                break
+
+    def get_default_input_device_index(self):
+        # Devuelve el primer índice de dispositivo
+        return 0
+
+
+def mapear_clasificacion(clasificacion):
+    if clasificacion == "aedes_albopictus_macho":
+        return 1
+    elif clasificacion == "aedes_albopictus_hembra":
+        return 2
+    elif clasificacion == "culex_pipiens_macho":
+        return 3
+    elif clasificacion == "culex_pipiens":
+        return 4
+    else:
+        return 0
+
+def imprimir_clasificacion(clasificacion):
+    if clasificacion:
+        print("La clasificación más probable es:", clasificacion)
+        return clasificacion
+    else:
+        print("No se pudo determinar la clasificación.")
+        return "No_se_determino"
+
 
 
 if __name__ == '__main__':
     hasRun = False
-    # Crear una carpeta llamada "audio" si no existe
-    carpeta_destino = 'audio'
-    if not os.path.exists(carpeta_destino):
-        os.makedirs(carpeta_destino)
     to0grados()
-    # GPIO.output(empujeFan, GPIO.LOW)
-    time.sleep(5)
-    mic_configurado = configurar_mic()
+    time.sleep(2)
     GPIO.output(pinSuccionador, GPIO.LOW)
+    detector = SoundDetector()
     try:
         while not hasRun:
             print('-------Inicio Ciclo')
@@ -420,8 +393,7 @@ if __name__ == '__main__':
             # compuertaCerrado()
             # Se espera detectar dentro de la capsula
             # deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
-            gradosPosicion(
-                grados * 1)  # Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
+            gradosPosicion(grados * 1)  # Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
             print("Para el succionador")
             GPIO.output(pinSuccionador, GPIO.HIGH)
             print('Se procede a la clasificacion del mosquito')
@@ -430,26 +402,24 @@ if __name__ == '__main__':
             compuertaPosicion = 0
             estadoDeteccion = False
             while not estadoDeteccion:
-                resultado = detectar_frecuencia_usb(mic_configurado)
-                compuertaPosicion = selectorCompuertaByRangoFrecuencia(resultado[0], 500, 630, 1, compuertaPosicion)
-                compuertaPosicion = selectorCompuertaByRangoFrecuencia(resultado[0], 630, 800, 2, compuertaPosicion)
+                # Uso de la clase SoundDetector
+                high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=puertoMicrofono,
+                                            repeat=False)  # Cambia el valor de input_device_index según tu dispositivo
+                clasificacion = clasificar_frecuencia(high_magnitude_freq)
+                nombreMosquito=imprimir_clasificacion(clasificacion)
+                compuertaPosicion = mapear_clasificacion(clasificacion)
                 if compuertaPosicion != 0:
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
                     time.sleep(1)
                     gradosPosicion(grados * 1)  # Se mueve a la posicion de la camara verificar esto/////////
                     GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
                     time.sleep(2)
-                    # Obtener la fecha y hora actual
-                    fecha_hora_actual = datetime.datetime.now()
-                    # Formatear la fecha y hora como una cadena
-                    formato_fecha_hora = fecha_hora_actual.strftime("%Y-%m-%d_%H-%M-%S")
-                    # Generar el nombre de archivo dentro de la carpeta "audio"
-                    nombre_archivo = os.path.join(carpeta_destino, 'Mosquito:' + str(
-                        compuertaPosicion) + 'fecha:' + formato_fecha_hora + '.wav')
-                    # Guardar la señal procesada en un archivo de audio WAV
-                    datos_np = np.frombuffer(resultado[1], dtype=np.int16)
-                    guardar_datos(compuertaPosicion, datos_np, frecuencia_muestreo)
-                    print('Se guarda la imagen del mosquito y el audio')
+
+                    if(detector.obtener_fecha_guardada()!=None):
+                        fechaGuardada = detector.obtener_fecha_guardada()
+                        capturar_foto(fechaGuardada,nombreMosquito)
+                        print('Se guarda la imagen del mosquito')
+
                     # ---------Se guarda el audio y la imagen------
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Volvemos a activar el succionador para mover
                     time.sleep(2)
