@@ -81,10 +81,26 @@ class SoundDetector:
             plt.ylim(0, None)  # Limitar la visualización a magnitudes positivas
 
             # Guardar la imagen si se proporciona un nombre de archivo
+            # Guardar la imagen si se proporciona un nombre de archivo
             if save_plot_filename:
-                plt.savefig(save_plot_filename)
+                datos_folder = "datos"
+                if not os.path.exists(datos_folder):
+                    os.makedirs(datos_folder)  # Crea la carpeta "datos" si no existe
 
-            plt.show()
+                # Crear la subcarpeta con la fecha actual si no existe
+                subcarpeta_fecha = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                carpeta_completa = os.path.join(datos_folder, subcarpeta_fecha)
+                if not os.path.exists(carpeta_completa):
+                    os.makedirs(carpeta_completa)  # Crea la subcarpeta con la fecha actual si no existe
+
+                # Guardar la imagen dentro de la carpeta con la fecha actual
+                filename_plot = os.path.join(carpeta_completa, save_plot_filename)
+                plt.savefig(filename_plot)
+
+                # Guardar el archivo de audio dentro de la carpeta con la fecha y hora actual
+                filename_audio = os.path.join(carpeta_completa, filename)
+                os.makedirs(carpeta_completa, exist_ok=True)  # Crear la carpeta si no existe
+                os.rename(filename, filename_audio)
 
             # Imprimir las frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
             print("Frecuencias que superan la magnitud de 0.2 dentro del rango de 100 Hz a 2000 Hz:", high_magnitude_freq)
