@@ -407,7 +407,6 @@ if __name__ == '__main__':
     to0grados()
     time.sleep(2)
     GPIO.output(pinSuccionador, GPIO.LOW)
-    detector = SoundDetector()
     try:
         while not hasRun:
             print('-------Inicio Ciclo')
@@ -429,6 +428,7 @@ if __name__ == '__main__':
             estadoDeteccion = False
             while not estadoDeteccion:
                 # Uso de la clase SoundDetector
+                detector = SoundDetector()
                 high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=puertoMicrofono,
                                             repeat=False)  # Cambia el valor de input_device_index según tu dispositivo
                 print(high_magnitude_freq)
