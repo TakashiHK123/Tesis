@@ -205,6 +205,7 @@ from collections import Counter
 
 def clasificar_frecuencia(high_magnitude_freq):
     try:
+        high_magnitude_freq = [freq for freq in high_magnitude_freq if freq is not None]
         print("high_magnitude_freq:", high_magnitude_freq)
 
         # Verificar si la lista de frecuencias no está vacía
@@ -324,7 +325,7 @@ class SoundDetector:
             magnitude_spectrum = np.abs(fft_data)
 
             # Identificar frecuencias que superan la magnitud de 0.2 dentro del rango de frecuencia especificado
-            high_magnitude_indices = np.where((magnitude_spectrum > 0.5) & (fft_freq >= 100) & (fft_freq <= 2000))[0]
+            high_magnitude_indices = np.where((magnitude_spectrum > 0.5) & (fft_freq >= 200) & (fft_freq <= 1500))[0]
             high_magnitude_freq = fft_freq[high_magnitude_indices]
 
             # Visualización del espectro de magnitud
