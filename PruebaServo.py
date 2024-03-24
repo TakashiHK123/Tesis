@@ -34,7 +34,7 @@ def calibrar():
     print("Calibrar")
     
 def to90grados():
-    for angle9 in range(0, 105, 5):
+    for angle9 in range(0, 115, 5):
         duty_cycle9 = 2.5 + (angle9 / 18.0)
         p.ChangeDutyCycle(duty_cycle9)
         
@@ -43,20 +43,38 @@ def to90grados():
 
 
 def to0grados():
-    for angle0 in range(105, -1, -5):
+    for angle0 in range(110, -1, -5):
         duty_cycle0 = 2.5 + (angle0 / 18.0)
         p.ChangeDutyCycle(duty_cycle0)
         
         #time.sleep(0.5)
     print("Succionar")
+    
+def apagarServo():
+    p.ChangeDutyCycle(0)        #time.sleep(0.5)
+    print("apagar")
+def encenderServo():
+    p.start(11)
 
 try:
     #c.stop()
     #p.stop()
     #GPIO.cleanup()
-    to0grados() 
-    time.sleep(2)
+    GPIO.setmode(GPIO.BCM)
+    
     to90grados()
+    time.sleep(2)
+    to0grados()
+    time.sleep(2)
+    #c.stop()
+    #GPIO.cleanup()
+    apagarServo()
+    time.sleep(5)
+    encenderServo()
+    time.sleep(1)
+    to90grados()
+    time.sleep(2)
+    to0grados()
     #compuertaCerrado()
     #time.sleep(2)
     #compuertaAbierta()

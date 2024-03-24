@@ -101,14 +101,14 @@ StepCount = StepCount2
 
 
 def to90grados():
-    for angle9 in range(0, 105, 5):
+    for angle9 in range(0, 115, 5):
         duty_cycle9 = 2.5 + (angle9 / 18.0)
         p.ChangeDutyCycle(duty_cycle9)
     print("Valvula Expulsar")
 
 
 def to0grados():
-    for angle0 in range(100, -1, -5):
+    for angle0 in range(110, -1, -5):
         duty_cycle0 = 2.5 + (angle0 / 18.0)
         p.ChangeDutyCycle(duty_cycle0)
     print("Valvula Succionar")
@@ -398,6 +398,12 @@ def imprimir_clasificacion(clasificacion):
         return None
 
 
+def apagarServo():
+    p.ChangeDutyCycle(0)        
+    print("apagar")
+def encenderServo():
+    p.start(11)
+
 
 if __name__ == '__main__':
     hasRun = False
@@ -407,7 +413,11 @@ if __name__ == '__main__':
     try:
         while not hasRun:
             print('-------Inicio Ciclo')
+            encenderServo()
+            time.sleep(1)
             to0grados()
+            time.sleep(1)
+            apagarServo()
             # compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
             GPIO.output(pinSuccionador, GPIO.LOW)
             deteccionMosquito()  # No pasa de esta linea hasta que entre un mosquito
@@ -418,6 +428,7 @@ if __name__ == '__main__':
             gradosPosicion(grados * 1)  # Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
             print("Para el succionador")
             GPIO.output(pinSuccionador, GPIO.HIGH)
+            time.sleep(4)
             print('Se procede a la clasificacion del mosquito')
             # Configurar el microfono fuera de la funcion
             # Ejecutar el detector de frecuencia con la configuracion del microfono
@@ -434,32 +445,34 @@ if __name__ == '__main__':
                 #nombreMosquito=imprimir_clasificacion(clasificacion)
                 #compuertaPosicion = mapear_clasificacion(clasificacion)
                 compuertaPosicion = 1
-                if(nombreMosquito is None):
+                if(compuertaPosicion is None):
                     carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
                     if os.path.exists(carpeta_fecha_actual):
                         shutil.rmtree(carpeta_fecha_actual)
                         print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
                 if compuertaPosicion != 0:
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
-                    time.sleep(1)
+                    time.sleep(3)
                     gradosPosicion(grados * 1)  # Se mueve a la posicion de la camara verificar esto/////////
                     GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
                     time.sleep(2)
 
                     if(detector.obtener_fecha_guardada() is not None):
                         fechaGuardada = detector.obtener_fecha_guardada()
-                        capturar_foto(fechaGuardada,nombreMosquito)
+                        capturar_foto(fechaGuardada,"MosquitoSinClasificar")
                         print('Se guarda la imagen del mosquito')
 
                     # ---------Se guarda el audio y la imagen------
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Volvemos a activar el succionador para mover
-                    time.sleep(2)
+                    time.sleep(1)
                     print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
                     gradosPosicion(grados * compuertaPosicion)
+                    encenderServo()
                     to90grados()
-                    time.sleep(5)
-                    GPIO.output(pinSuccionador, GPIO.HIGH)  # Apagamos el succionar mientras
+                    time.sleep(10)
                     retorno(grados * (compuertaPosicion + 2))
+                    GPIO.output(pinSuccionador, GPIO.HIGH)  # Apagamos el succionar mientras
+                    #retorno(grados * (compuertaPosicion + 2))
                     compuertaPosicion = 0
                     estadoDeteccion = True
 

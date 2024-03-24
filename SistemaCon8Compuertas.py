@@ -19,6 +19,7 @@ servoPIN = 13
 #GPIO.setup(succionFan, GPIO.OUT)
 # GPIO.setup(empujeFan, GPIO.OUT)
 GPIO.setup(servoPIN, GPIO.OUT)
+GPIO.setup(16,GPIO.OUT)
 p = GPIO.PWM(servoPIN, 50) # GPIO 13 for PWM with 50Hz
 p.start(2.5) 
 for pin in StepPins:
@@ -108,6 +109,14 @@ def posicionExpulsion(grados):
     else:
         steps(grados_a_pasos(grados))
         
+def to90grados():
+    for angle9 in range(0, 105, 5):
+        duty_cycle9 = 2.5 + (angle9 / 18.0)
+        p.ChangeDutyCycle(duty_cycle9)
+        
+        #time.sleep(0.5)
+    print("Expulsar")
+    
 if __name__ == '__main__' :
     hasRun=False
     #GPIO.output(succionFan, GPIO.HIGH)
@@ -117,14 +126,17 @@ if __name__ == '__main__' :
     #while not hasRun:
             #steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
             
-    #posicionExpulsion(siguiente*1)
+    #posicionExpulsion(siguiente*3)
+    #GPIO.output(16, GPIO.LOW)  # Se activa el succionador
+    #to90grados()
+    #GPIO.output(16, GPIO.HIGH) # Se desactiva el succionador
     #GPIO.output(succionFan, GPIO.LOW)
     #GPIO.output(empujeFan, GPIO.HIGH)
     #to0grados()
     #print("succion")
     #time.sleep(2)
     #steps(-grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens anti-horaire
-    retorno(siguiente*1)
+    retorno(siguiente*2)
     #GPIO.output(empujeFan, GPIO.LOW)
     #GPIO.output(succionFan, GPIO.HIGH)
     #to90grados()
