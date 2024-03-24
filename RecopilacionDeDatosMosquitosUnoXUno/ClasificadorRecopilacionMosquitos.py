@@ -277,7 +277,7 @@ class SoundDetector:
         self.CHANNELS = 1
         self.RATE = 44100
         self.CHUNK = 512
-        self.RECORD_SECONDS = 3
+        self.RECORD_SECONDS = 5
         self.LOCALDATE = None
 
     def obtener_fecha_guardada(self):
@@ -431,8 +431,9 @@ if __name__ == '__main__':
                 print(high_magnitude_freq)
                 clasificacion = clasificar_frecuencia(high_magnitude_freq)
                 print(clasificacion)
-                nombreMosquito=imprimir_clasificacion(clasificacion)
-                compuertaPosicion = mapear_clasificacion(clasificacion)
+                #nombreMosquito=imprimir_clasificacion(clasificacion)
+                #compuertaPosicion = mapear_clasificacion(clasificacion)
+                compuertaPosicion = 1
                 if(nombreMosquito is None):
                     carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
                     if os.path.exists(carpeta_fecha_actual):
