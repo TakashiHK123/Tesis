@@ -26,14 +26,62 @@ WindowManager:
         size_hint: .1,.1
         text: "Borrar\nGrafico"
         on_press:app.borrarGrafico()
+    Label:
+        text: "Frecuencia\nDominante:\n500Hz"
+        size_hint: .1,.1
+        pos_hint: {"right":0.9,"top":.5}
 
-    PrimerWidget:
-    SegundoWidget:
+    #Lo que era PrimerWidget
+    Button: #cerrar interfaz
+        size_hint: .245,.125
+        pos_hint: {"center_x":0.125,"center_y":0.875}
+        text: "Cerrar Interfaz"
+        on_press:app.stop()
+
+    Button: #iniciar/cerrar script
+        size_hint: .245,.125
+        pos_hint: {"center_x":0.375,"center_y":0.875}
+        text: app.botonScript 
+        on_press: 
+            app.iniciarPrograma()
+
+    Button: #selector de modo manual y automatico
+        size_hint: .245,.125
+        pos_hint: {"center_x":0.375,"center_y":0.75}
+        text: ["Modo Automatico","Modo Manual"][app.modoManual]
+        on_press: app.modoManual=not app.modoManual
+    Label: 
+        size_hint: .245,.125
+        pos_hint: {"center_x":0.375,"center_y":0.625}
+        text: "*Mas Botones Para El Modo Manual*"
+
+
+    ###Lo que era SegundoWidget
+    Label:
+        size_hint: .125,.125
+        pos_hint: {"right":0.25,"top":1.025}
+        text: 'Cant. de Mosquitos Macho: '+ str(app.contM)
+    Label:
+        size_hint: .125,.125
+        pos_hint: {"right":0.75,"top":1.025}
+        text: 'Cant. de Mosquitos Hembra: '+str(app.contH)
+    
+    # Para mostrar el estado actual
+    Button:    
+        size_hint: .49,.125
+        pos_hint: {"center_x":0.75,"center_y":0.75}
+        text: app.estado
+        on_press: app.funcPrueba()
+        #on_release:app.graficar()
+        #on_state:app.graficar()
+    Label:  
+        size_hint: .49,.125
+        pos_hint: {"center_x":0.75,"center_y":0.875}
+        text: "Estado de la trampa"
 
 
 <SecondWindow>:
 	name: "second"
-
 
     Label:
         text: "Second\nScreen"
@@ -46,57 +94,20 @@ WindowManager:
         on_release: 
             app.root.current = "first"
             root.manager.transition.direction = "right"
+    Button:
+        pos_hint:{"right":1,"top":0.7}
+        size_hint: .1,.1
+        text: "Activar video"
+        disabled:not app.modoManual
+    Button:
+        pos_hint:{"right":1,"top":0.6}
+        size_hint: .1,.1
+        text: "Sacar Foto"
+        disabled:not app.modoManual
+
     TercerWidget:
 
-<PrimerWidget>   
-
-    Button:
-        center_x: root.width* 1/8
-        center_y: root.height /4*3.5
-        size: root.width / 4.1,root.height / 8
-        text: "Cerrar Interfaz"
-        on_press:app.stop()
-
-    Button:
-        center_x: root.width* 3/8
-        center_y: root.height /4*3.5
-        size: root.width / 4.1,root.height / 8
-        id: hulk
-        text: app.botonScript #root.text
-        on_press: 
-            #root.callback()
-            #app.botonScript="Cerrando Script"
-            app.iniciarPrograma()
-
-
-<SegundoWidget>
     
-    Label:
-        center_x: root.width / 4 
-        center_y: root.height /4*3.85
-        size: root.width / 8,root.height / 8
-        id: loki
-        text: root.MosHembra
-
-    Label:
-        center_x: root.width / 4 *3
-        center_y: root.height /4*3.85
-        size: root.width / 8,root.height / 8
-        id: lokis
-        text: root.MosMacho
-
-    Button:
-        
-        center_x: root.width / 4 *3
-        center_y: root.height /4*3.5
-        size: root.width / 2.05,root.height / 8
-        text: root.text
-        on_press: root.callback()
-        #on_release:app.graficar()
-        #on_state:app.graficar()
-        #on_release: print("ahhh")
-        #on_state: print("my current state is {}".format(self.state))
-
 <TercerWidget>
 
     canvas:
@@ -107,14 +118,7 @@ WindowManager:
             source:app.imagen
             pos: root.width *0.01,root.height*0.1
             #size: root.width*0.6,root.height*0.6
-            size:1080/1.2,700/1.2
-            #pantalla 240x320
+            size:1080/2.4,700/2.4
+            #pantalla 480*320
 
 
-    # Button:
-        
-    #     center_x: root.width *0.8
-    #     center_y: root.height *0.5
-    #     size: root.width / 8,root.height / 8
-    #     text: root.text
-    #     on_press: root.callback()

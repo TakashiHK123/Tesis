@@ -1,6 +1,8 @@
 import random
 import time
 import numpy as np
+import os
+import matplotlib.pyplot as plt
 #import signal
 
 # def handle_exit(sig, frame):
@@ -22,32 +24,48 @@ class FakeClass():
         pass
     def is_set(self):
         pass
+    def empty(self):
+        pass
 
 
-def ejemplo(queue=FakeClass(),parada=FakeClass()):
+#plt.plot([1,1.2],[4,5])
+
+def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
     # signal.signal(signal.SIGTERM, handle_exit)  #probar en linux, en windows no funciona
     # signal.signal(signal.SIGINT, handle_exit)
     try:
+        if not os.path.exists("carpeta_pruebas"):
+            os.makedirs("carpeta_pruebas")
+        archivo=os.path.join("carpeta_pruebas", 'myfile.jpg')
+        plt.savefig(archivo)
+        tiempo=time.time()
         print("holaa")
         y=np.zeros(1024)
         x=np.zeros(1024)
-        while(True):
-            print("looop")
-            if parada.is_set():
+
+        while(True):   
+            if not queueEnt.empty():
+                accion=queueEnt.get()
+            if cierre.is_set():
                 raise KeyboardInterrupt('kk')
-            time.sleep(2)
-            for i in range(1024):
-                y[i]=random.random()
-                x[i]=i
-            queue.put(y)
-            queue.put(x)
+            #time.sleep(2)
+            if time.time()-tiempo >2:
+                print("nuevo grafico")
+                for i in range(1024):
+                    y[i]=random.random()
+                    x[i]=i
+                queueSal.put("Graficar")
+                queueSal.put(y)
+                queueSal.put(x)
+                tiempo=time.time()
+
     except KeyboardInterrupt as e:
         print('exit handled')
         #queue.close()
         print(e)
         #time.sleep(5)
-        parada.clear()
-        return None
+        cierre.clear()
+        #return None
         
 
 

@@ -6,7 +6,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     from kivy.app import App
     from kivy.uix.widget import Widget
     # from kivy.uix.button import Button
-    from kivy.properties import StringProperty,NumericProperty#,ObjectProperty
+    from kivy.properties import StringProperty,NumericProperty,BooleanProperty#,ObjectProperty
     #from kivy.uix.gridlayout import GridLayout
     #from kivy.uix.floatlayout import FloatLayout
     from kivy.uix.boxlayout import BoxLayout
@@ -17,19 +17,17 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     from kivy.lang import Builder
     from kivy.clock import Clock
     from multiprocessing import Process, Queue, Event
+    #from kivy.config import Config
+    from kivy.core.window import Window
     
-    
-    # x = [1,2,3,4,5]
-    # y = [5, 12, 6, 9, 15]
 
-    # plt.plot(x,y)
-    # plt.ylabel("This is MY Y Axis")
-    # plt.xlabel("X Axis")
+    
+
+    plt.style.use("dark_background")
 
 
     class FirstWindow(Screen):
         pass
-
 
     class SecondWindow(Screen):
         pass
@@ -37,45 +35,28 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     class WindowManager(ScreenManager):
         pass
 
-    class PrimerWidget(Widget):   
+    class TercerWidget(Widget):
         pass
-        # text=StringProperty('Iniciar Script')
-        # def callback(self):
-        #     if self.text != 'Iniciar Script':
-        #         self.text = 'Iniciar Script'
-        #     else :
-        #         self.text = 'Parar Script'
 
-
-    class SegundoWidget(Widget):
-        MosMacho = StringProperty('Cant. de Mosquitos Macho: 0')
-        MosHembra = StringProperty('Cant. de Mosquitos Hembra: 0')
+    class Innterfaz(App):
+        pCorriendo=BooleanProperty(False)
+        botonScript=StringProperty("Iniciar Script")
+        imagen=StringProperty("tinky.jpeg")
         contM=NumericProperty(0)
         contH=NumericProperty(0)
-        text = StringProperty('Detectando\nMosquitos')
-        def callback(self):
-            if self.text != 'Detectando\nMosquitos':
-                self.text = 'Detectando\nMosquitos'
+        estado = StringProperty('Detectando\nMosquitos')
+        modoManual =BooleanProperty(False)
+        
+        def funcPrueba(self):
+            if self.estado != 'Detectando\nMosquitos':
+                self.estado = 'Detectando\nMosquitos'
             else :
-                self.text = 'Mosquito\nDetectado'
+                self.estado = 'Mosquito\nDetectado'
                 if randint(0,1):
                     self.contH +=1
                 else :
                     self.contM +=1
-                self.MosHembra='Cant. de Mosquitos Hembra: '+str(self.contH)
-                self.MosMacho='Cant. de Mosquitos Hembra: '+str(self.contM)
 
-    class TercerWidget(Widget):
-        pass
-        # text = StringProperty('tinky.jpeg')
-        # def callback(self):
-        #     print("e")
-
-
-    class Innterfaz(App):
-        pCorriendo=NumericProperty(0)
-        botonScript=StringProperty("Iniciar Script")
-        imagen=StringProperty("tinky.jpeg")
 
         def graficar(self):
             self.borrarGrafico() # si no pongo esto se acumlan graficos encimados
@@ -90,14 +71,22 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 pass #xd
 
         def checkQueue(self,dt=0):
-            if not self.q1.empty():
-                y=self.q1.get()
-                x=self.q1.get()
-                plt.clf()
-                plt.plot(x,y)
-                plt.xlabel("Frecuencias")
-                plt.ylabel("FFT")
-                self.graficar()
+            if not self.qEnt.empty():
+                A=self.qEnt.get()
+                if A=="Graficar":
+                    y=self.qEnt.get()
+                    x=self.qEnt.get()
+                    plt.clf()
+                    plt.plot(x,y)
+                    plt.xlabel("Frecuencias (Hz)")
+                    plt.ylabel("FFT")
+                    self.graficar()
+                elif A=="NuevoEstado":
+                    x=self.qEnt.get()
+                    self.estado=x
+                elif A=="Imagen":
+                    x=self.qEnt.get()
+                    self.imagen=x
 
 
         def iniciarPrograma(self):
@@ -106,9 +95,10 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.botonScript="Iniciar Script"
             else:
                 self.pCorriendo=1
-                self.q1=Queue() 
-                self.parada=Event()
-                self.p=Process(target=pP.ejemplo,args=(self.q1,self.parada))
+                self.qEnt=Queue() 
+                self.qSal=Queue() 
+                self.cerrar=Event()
+                self.p=Process(target=pP.ejemplo,args=(self.qEnt,self.qSal,self.cerrar))
                 self.p.start()
                 self.botonScript="Cerrar Script"
                 Clock.schedule_interval(self.checkQueue, 1)
@@ -116,12 +106,15 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         def pararPrograma(self):
             Clock.unschedule(self.checkQueue)
             # self.p.terminate()
-            self.parada.set()
-            while(self.parada.is_set()):
+            self.cerrar.set()
+            while(self.cerrar.is_set()):
                 pass
-            while (not self.q1.empty()):
+            while (not self.qEnt.empty()):
                 self.checkQueue()
-            self.q1.close()
+            while (not self.qSal.empty()):
+                self.qSal.get()
+            self.qEnt.close()
+            self.qSal.close()
             self.p.join()
             self.pCorriendo=0
 
@@ -137,5 +130,11 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
 
 
 if __name__ == '__main__':
+    # Config.set('graphics', 'resizable', '0')
+    # Config.set('graphics', 'width', '480')
+    # Config.set('graphics', 'height', '320')
+    #Window.size = (480, 320)
+    #Window.fullscreen = True
+    #Window.maximize()
     Innterfaz().run()
 
