@@ -7,8 +7,8 @@ import scipy.io.wavfile as wav
 import alsaaudio
 import time
 import pyudev
-import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft
+#import matplotlib.pyplot as plt
+from scipy.fftpack import fft, ifft
 from scipy.io.wavfile import write
 import datetime
 import os
@@ -29,7 +29,7 @@ GPIO.cleanup()
 longitud_senal = 1024 #Tamanho del bufer de lectura
 frecuencia_muestreo = 44100 # Establecer la frecuencia de muestreo a 42.667 kHz
 
-
+tiempoDelay = 1.5 #El tiempo necesario para no detectar un falso negativo
 puertoCamara=0
 puertoMicrofono=2
 # Use BCM GPIO references
@@ -176,12 +176,20 @@ def gradosPosicion(grados):
     print('Seleccionador en posicion')
 
 def deteccionMosquito():
+    estado=1
     while True:
         # Lee el valor del pin GPIO
         value = GPIO.input(pin_sensor)
         if value == GPIO.LOW:
-            print('Se procede a la deteccion del mosquito')
-            break
+            if estado==1:
+                tiempo_inicio = time.time() #Inicia el temporizador
+                estado=2
+            tiempo_baja = abs(time.time() - tiempo_inicio)
+            if tiempo_baja >= tiempoDelay:
+                print('Se procede a la deteccion del mosquito')
+                break
+        else:
+            estado = 1
 
 def deteccionMosquitoDentroDeLaCapsula():
     estado = 0  # estados 0 aun no se detecto el mosquito, 1 se a detectado
@@ -332,8 +340,8 @@ def capturar_foto(carpeta_mosquitos):
         return
 
     # Ajustar la resolución de la cámara
-    cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
-    cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
+    #cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1080)
+    #cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 700)
     
     # Crear la carpeta del mosquito si no existe
     if not os.path.exists(carpeta_mosquitos):
