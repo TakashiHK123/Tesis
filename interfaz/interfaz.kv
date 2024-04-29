@@ -27,7 +27,7 @@ WindowManager:
         text: "Borrar\nGrafico"
         on_press:app.borrarGrafico()
     Label:
-        text: "Frecuencia\nDominante:\n500Hz"
+        text: "Frecuencia\nDominante:\n"+str(app.frecD)+"Hz"
         size_hint: .1,.1
         pos_hint: {"right":0.9,"top":.5}
 
@@ -67,11 +67,11 @@ WindowManager:
         text: 'Cant. de Mosquitos Hembra: '+str(app.contH)
     
     # Para mostrar el estado actual
-    Button:    
+    Label:    
         size_hint: .49,.125
         pos_hint: {"center_x":0.75,"center_y":0.75}
         text: app.estado
-        on_press: app.funcPrueba()
+        #on_press: app.funcPrueba()
         #on_release:app.graficar()
         #on_state:app.graficar()
     Label:  

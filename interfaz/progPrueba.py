@@ -42,6 +42,10 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
         print("holaa")
         y=np.zeros(1024)
         x=np.zeros(1024)
+        queueSal.put("NuevoEstado")
+        queueSal.put("Iniciando")
+        queueSal.put("Imagen")
+        queueSal.put("datos\mosquitos1_2024-03-05_01-26-23\imagen.jpg")
 
         while(True):   
             if not queueEnt.empty():
@@ -57,6 +61,9 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
                 queueSal.put("Graficar")
                 queueSal.put(y)
                 queueSal.put(x)
+                queueSal.put([500,400])
+                queueSal.put([40,80])
+                queueSal.put(None)
                 tiempo=time.time()
 
     except KeyboardInterrupt as e:

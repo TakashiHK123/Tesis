@@ -1,5 +1,6 @@
 # import kivy
-import progPrueba as pP
+from progPrueba import ejemplo as pP
+#from progParaInterfaz import mainPPI as pP
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
@@ -44,19 +45,10 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         imagen=StringProperty("tinky.jpeg")
         contM=NumericProperty(0)
         contH=NumericProperty(0)
-        estado = StringProperty('Detectando\nMosquitos')
+        estado = StringProperty('Trampa\nApagada')
         modoManual =BooleanProperty(False)
+        frecD=NumericProperty(0)
         
-        def funcPrueba(self):
-            if self.estado != 'Detectando\nMosquitos':
-                self.estado = 'Detectando\nMosquitos'
-            else :
-                self.estado = 'Mosquito\nDetectado'
-                if randint(0,1):
-                    self.contH +=1
-                else :
-                    self.contM +=1
-
 
         def graficar(self):
             self.borrarGrafico() # si no pongo esto se acumlan graficos encimados
@@ -76,14 +68,29 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 if A=="Graficar":
                     y=self.qEnt.get()
                     x=self.qEnt.get()
+                    freqAltas=self.qEnt.get()
+                    indices=self.qEnt.get()
+                    self.frecD=max(freqAltas)
                     plt.clf()
                     plt.plot(x,y)
-                    plt.xlabel("Frecuencias (Hz)")
-                    plt.ylabel("FFT")
+                    #plt.figure(figsize=(8, 4))
+                    plt.xlabel('Frecuencia (Hz)')
+                    plt.ylabel('Magnitud')
+                    plt.title('Espectro de Magnitud')
+                    plt.plot(freqAltas, y[indices], 'ro', markersize=5)
+                    #plt.grid(True)
+                    direccion=self.qEnt.get()
+                    if direccion!=None:
+                        plt.savefig(direccion)
                     self.graficar()
                 elif A=="NuevoEstado":
                     x=self.qEnt.get()
                     self.estado=x
+                    if x=="Clasificando\nMosquito":
+                        if self.frecD>=550:
+                            contH+=1
+                        else:
+                            cotM+=1
                 elif A=="Imagen":
                     x=self.qEnt.get()
                     self.imagen=x
@@ -98,7 +105,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.qEnt=Queue() 
                 self.qSal=Queue() 
                 self.cerrar=Event()
-                self.p=Process(target=pP.ejemplo,args=(self.qEnt,self.qSal,self.cerrar))
+                self.p=Process(target=pP,args=(self.qEnt,self.qSal,self.cerrar))
                 self.p.start()
                 self.botonScript="Cerrar Script"
                 Clock.schedule_interval(self.checkQueue, 1)
@@ -117,6 +124,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
             self.qSal.close()
             self.p.join()
             self.pCorriendo=0
+            self.estado='Trampa\nApagada'
 
         def on_start(self):
             pass
