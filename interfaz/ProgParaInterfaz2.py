@@ -183,13 +183,14 @@ def gradosPosicion(grados,cierre):
     print('Seleccionador en posicion')
 
 
+
 def deteccionMosquito(queueSal,queueEnt,cierre):
     estado = 1
     while True:
-        if not queueEnt.empty():
-                accion=queueEnt.get()
         if cierre.is_set():
             raise KeyboardInterrupt('cierre detectado')
+        if not queueEnt.empty():
+            return False
         # Lee el valor del pin GPIO
         value = GPIO.input(pin_sensor)
         if value == GPIO.LOW:
@@ -199,7 +200,7 @@ def deteccionMosquito(queueSal,queueEnt,cierre):
             tiempo_baja = abs(time.time() - tiempo_inicio)
             if tiempo_baja >= tiempoDelay:
                 print('Se procede a la deteccion del mosquito')
-                break
+                return True
         else:
             estado = 1
 
@@ -419,41 +420,72 @@ def encenderServo():
     p.start(11)
 
 def mainPPI(queueSal,queueEnt,cierre):
+    Modo=queueEnt.get()
+    Accion=None
+    PosicionActual=0
+    def revisarEnt():
+        if cierre.is_set():
+            raise KeyboardInterrupt('cierre detectado')
+        if not queueEnt.empty():
+            A=queueEnt.get()
+            if A=="Modo Automatico" or A=="Modo Manual":
+                Modo=A
+            else:
+                Accion=A
+    
+    def posAbsoluta(angulo):
+        if angulo>PosicionActual:
+            gradosPosicion(angulo-PosicionActual,cierre)
+        elif angulo<PosicionActual:
+            retorno(PosicionActual-angulo,cierre)
+        PosicionActual=angulo
+    
     hasRun = False
     to0grados()
     time.sleep(2)
     GPIO.output(pinSuccionador, GPIO.LOW)
     try:
         while not hasRun:
-            print('-------Inicio Ciclo')
-            queueSal.put("NuevoEstado")
-            queueSal.put("Iniciando")
-            encenderServo()
-            time.sleep(1)
-            to0grados()
-            time.sleep(1)
-            apagarServo()
-            # compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
-            GPIO.output(pinSuccionador, GPIO.LOW)
-            queueSal.put("NuevoEstado")
-            queueSal.put("Detectando\nMosquitos")
-            deteccionMosquito(queueSal,queueEnt,cierre)  # No pasa de esta linea hasta que entre un mosquito
-            queueSal.put("NuevoEstado")
-            queueSal.put("Mosquito\nDetectado")
-            # Se a detectado un mosquito se procede a cerrar las compuertas.
-            # compuertaCerrado()
-            # Se espera detectar dentro de la capsula
-            # deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
-            gradosPosicion(grados * 1,cierre)  # Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
-            print("Para el succionador")
-            GPIO.output(pinSuccionador, GPIO.HIGH)
-            time.sleep(4)
-            print('Se procede a la clasificacion del mosquito')
-            # Configurar el microfono fuera de la funcion
-            # Ejecutar el detector de frecuencia con la configuracion del microfono
-            compuertaPosicion = 0
-            estadoDeteccion = False
-            while not estadoDeteccion:
+            revisarEnt()
+            if Modo=="Modo Automatico" or Accion=="Posicion Inicial":
+                posAbsoluta(0)
+                Accion=None
+                print('-------Inicio Ciclo')
+                queueSal.put("NuevoEstado")
+                queueSal.put("Iniciando")
+                encenderServo()
+                time.sleep(1)
+                to0grados()
+                time.sleep(1)
+                apagarServo()
+                # compuertaAbierta()  # Se mantiene abierto siempre que no haya mosquitos dentro del seleccionador
+                GPIO.output(pinSuccionador, GPIO.LOW)
+                queueSal.put("NuevoEstado")
+                queueSal.put("Detectando\nMosquitos")
+                if(deteccionMosquito(queueSal,queueEnt,cierre)):  # No pasa de esta linea hasta que entre un mosquito
+                    queueSal.put("NuevoEstado")
+                    queueSal.put("Mosquito\nDetectado")
+                    # Se a detectado un mosquito se procede a cerrar las compuertas.
+                    # compuertaCerrado()
+                    # Se espera detectar dentro de la capsula
+                    # deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
+                else:
+                    revisarEnt()
+                
+            if Modo=="Modo Automatico" or Accion=="Grabar Audio":
+                Accion=None
+                #gradosPosicion(grados * 1,cierre)  # Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
+                posAbsoluta(grados * 1)
+                print("Para el succionador")
+                GPIO.output(pinSuccionador, GPIO.HIGH)
+                time.sleep(4)
+                print('Se procede a la clasificacion del mosquito')
+                # Configurar el microfono fuera de la funcion
+                # Ejecutar el detector de frecuencia con la configuracion del microfono
+                # compuertaPosicion = 0
+                # estadoDeteccion = False
+                # while not estadoDeteccion:
+            
                 queueSal.put("NuevoEstado")
                 queueSal.put("Grabando\nSonido")
                 # Uso de la clase SoundDetector
@@ -465,42 +497,53 @@ def mainPPI(queueSal,queueEnt,cierre):
                 print(clasificacion)
                 #nombreMosquito=imprimir_clasificacion(clasificacion)
                 #compuertaPosicion = mapear_clasificacion(clasificacion)
-                compuertaPosicion = 1
-                if(compuertaPosicion is None):
-                    carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
-                    if os.path.exists(carpeta_fecha_actual):
-                        shutil.rmtree(carpeta_fecha_actual)
-                        print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
-                if compuertaPosicion != 0:
-                    GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
-                    time.sleep(3)
-                    gradosPosicion(grados * 1,cierre)  # Se mueve a la posicion de la camara verificar esto/////////
-                    GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
-                    time.sleep(2)
-                    queueSal.put("NuevoEstado")
-                    queueSal.put("Fotografiando")
-                    if(detector.obtener_fecha_guardada() is not None):
-                        fechaGuardada = detector.obtener_fecha_guardada()
-                        auxFoto=capturar_foto(fechaGuardada,"MosquitoSinClasificar")
-                        queueSal.put("Imagen")
-                        queueSal.put(auxFoto)
-                        print('Se guarda la imagen del mosquito')
+                # compuertaPosicion = 1
+                # if(compuertaPosicion is None):
+                #     carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
+                #     if os.path.exists(carpeta_fecha_actual):
+                #         shutil.rmtree(carpeta_fecha_actual)
+                #         print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
 
-                    # ---------Se guarda el audio y la imagen------
-                    queueSal.put("NuevoEstado")
-                    queueSal.put("Clasificando\nMosquito")
-                    GPIO.output(pinSuccionador, GPIO.LOW)  # Volvemos a activar el succionador para mover
-                    time.sleep(1)
-                    print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
-                    gradosPosicion(grados * compuertaPosicion,cierre)
-                    encenderServo()
-                    to90grados()
-                    time.sleep(10)
-                    retorno(grados * (compuertaPosicion + 2),cierre)
+
+            if Modo=="Modo Automatico" or Accion=="Fotografiar":
+                Accion=None
+                #if compuertaPosicion != 0:
+                GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
+                time.sleep(3)
+                posAbsoluta(grados*2)
+                #gradosPosicion(grados * 1,cierre)  # Se mueve a la posicion de la camara verificar esto/////////
+                GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
+                time.sleep(2)
+                queueSal.put("NuevoEstado")
+                queueSal.put("Fotografiando")
+                if(detector.obtener_fecha_guardada() is not None):
+                    fechaGuardada = detector.obtener_fecha_guardada()
+                    dirFoto=capturar_foto(fechaGuardada,"MosquitoSinClasificar")
+                    queueSal.put("Imagen")
+                    queueSal.put(dirFoto)
+                    print('Se guarda la imagen del mosquito')
+
+            if Modo=="Modo Automatico" or Accion=="Soltar Mosquito":
+                Accion=None
+                # ---------Se guarda el audio y la imagen------
+                compuertaPosicion = 1
+                queueSal.put("NuevoEstado")
+                queueSal.put("Clasificando\nMosquito")
+                GPIO.output(pinSuccionador, GPIO.LOW)  # Volvemos a activar el succionador para mover
+                time.sleep(1)
+                print(f'Se detecto el tipo de mosquito para la compuerta:{compuertaPosicion}')
+                #gradosPosicion(grados * compuertaPosicion,cierre)
+                posAbsoluta(grados*(2+compuertaPosicion))
+                encenderServo()
+                to90grados()
+                time.sleep(10)
+                if Modo=="Modo Automatico":
+                    #retorno(grados * (compuertaPosicion + 2),cierre)
+                    posAbsoluta(0)
                     GPIO.output(pinSuccionador, GPIO.HIGH)  # Apagamos el succionar mientras
                     #retorno(grados * (compuertaPosicion + 2))
-                    compuertaPosicion = 0
-                    estadoDeteccion = True
+                    #compuertaPosicion = 0
+                    #estadoDeteccion = True
 
     except KeyboardInterrupt:
         c.stop()

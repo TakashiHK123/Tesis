@@ -50,6 +50,7 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
         while(True):   
             if not queueEnt.empty():
                 accion=queueEnt.get()
+                print(accion)
             if cierre.is_set():
                 raise KeyboardInterrupt('kk')
             #time.sleep(2)

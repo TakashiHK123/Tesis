@@ -1,6 +1,7 @@
 # import kivy
 from progPrueba import ejemplo as pP
 #from progParaInterfaz import mainPPI as pP
+#from progParaInterfaz2 import mainPPI as pP
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
@@ -46,7 +47,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         contM=NumericProperty(0)
         contH=NumericProperty(0)
         estado = StringProperty('Trampa\nApagada')
-        modoManual =BooleanProperty(False)
+        modoManual =BooleanProperty(True)
         frecD=NumericProperty(0)
         
 
@@ -108,6 +109,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.p=Process(target=pP,args=(self.qEnt,self.qSal,self.cerrar))
                 self.p.start()
                 self.botonScript="Cerrar Script"
+                self.qSal.put(["Modo Automatico","Modo Manual"][self.modoManual])
                 Clock.schedule_interval(self.checkQueue, 1)
 
         def pararPrograma(self):

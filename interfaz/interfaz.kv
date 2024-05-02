@@ -49,11 +49,34 @@ WindowManager:
         size_hint: .245,.125
         pos_hint: {"center_x":0.375,"center_y":0.75}
         text: ["Modo Automatico","Modo Manual"][app.modoManual]
-        on_press: app.modoManual=not app.modoManual
-    Label: 
-        size_hint: .245,.125
-        pos_hint: {"center_x":0.375,"center_y":0.625}
-        text: "*Mas Botones Para El Modo Manual*"
+        on_press: 
+            app.modoManual=not app.modoManual
+            if app.pCorriendo:app.qSal.put(self.text)
+                    
+    Button: 
+        size_hint: .245,.0625
+        pos_hint: {"center_x":0.125,"center_y":0.65625}
+        disabled:not app.modoManual or not app.pCorriendo
+        text: "Ir al inicio"
+        on_press: if app.pCorriendo: app.qSal.put("Posicion Inicial")
+    Button: 
+        size_hint: .245,.0625
+        pos_hint: {"center_x":0.375,"center_y":0.65625}
+        disabled:not app.modoManual or not app.pCorriendo
+        text: "Grabar Audio"
+        on_press: if app.pCorriendo: app.qSal.put("Grabar Audio")
+    Button: 
+        size_hint: .245,.0625
+        pos_hint: {"center_x":0.625,"center_y":0.65625}
+        disabled:not app.modoManual or not app.pCorriendo
+        text: "Fotografiar"
+        on_press: if app.pCorriendo: app.qSal.put("Fotografiar")
+    Button: 
+        size_hint: .245,.0625
+        pos_hint: {"center_x":0.875,"center_y":0.65625}
+        disabled:not app.modoManual or not app.pCorriendo
+        text: "Soltar Mosquito"
+        on_press: if app.pCorriendo: app.qSal.put("Soltar Mosquito")
 
 
     ###Lo que era SegundoWidget
@@ -98,12 +121,13 @@ WindowManager:
         pos_hint:{"right":1,"top":0.7}
         size_hint: .1,.1
         text: "Activar video"
-        disabled:not app.modoManual
+        disabled:True#not app.modoManual or not app.pCorriendo
     Button:
         pos_hint:{"right":1,"top":0.6}
         size_hint: .1,.1
         text: "Sacar Foto"
-        disabled:not app.modoManual
+        disabled:not app.modoManual or not app.pCorriendo
+        on_press: if app.pCorriendo: app.qSal.put("Fotografiar")
 
     TercerWidget:
 
