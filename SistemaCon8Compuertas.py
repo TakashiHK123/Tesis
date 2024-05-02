@@ -96,18 +96,22 @@ def grados_a_pasos(grados):
     return int(pasos)
 
 def retorno(grados):
-    if (grados>180):
-        grados = 360-grados
+    if (grados > 180):
+        grados = 360 - grados
         steps(grados_a_pasos(grados))
     else:
         steps(-grados_a_pasos(grados))
-        
-def posicionExpulsion(grados):
-    if(grados>180):
-        grados = 360-grados
+
+
+def gradosPosicion(grados):
+    if (grados > 180 and grados != 0):
+        grados = 360 - grados
         steps(-grados_a_pasos(grados))
-    else:
+    elif (grados != 0):
         steps(grados_a_pasos(grados))
+    print('Seleccionador en posicion')
+
+
         
 def to90grados():
     for angle9 in range(0, 105, 5):
@@ -119,31 +123,12 @@ def to90grados():
     
 if __name__ == '__main__' :
     hasRun=False
-    #GPIO.output(succionFan, GPIO.HIGH)
-    #to90grados()
-    #GPIO.output(empujeFan, GPIO.LOW)
-    #time.sleep(5)
-    #while not hasRun:
-            #steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
-            
-    #posicionExpulsion(siguiente*3)
-    #GPIO.output(16, GPIO.LOW)  # Se activa el succionador
-    #to90grados()
-    #GPIO.output(16, GPIO.HIGH) # Se desactiva el succionador
-    #GPIO.output(succionFan, GPIO.LOW)
-    #GPIO.output(empujeFan, GPIO.HIGH)
-    #to0grados()
-    #print("succion")
-    #time.sleep(2)
-    #steps(-grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens anti-horaire
-    retorno(siguiente*2)
-    #GPIO.output(empujeFan, GPIO.LOW)
-    #GPIO.output(succionFan, GPIO.HIGH)
-    #to90grados()
-    #print("EMPUJE")
-    #time.sleep(5)
-            #hasRun=True
-    #print("Stop motor")
-    #GPIO.output(succionFan, GPIO.LOW)
-    #for pin in StepPins:
-            #GPIO.output(pin, False)
+
+    #El gradosPosicion() sirve para girar el cilindro a las posiciones deseadas, seria casi siempre 45 grados para el siguiente agujero.
+    #Retrono() seria para retornar hasta cuantos grados se a pasado x2, para volver a donde estaba para comenzar en el ciclo,
+    #esta mejor implementado en la carpeta RecopilacionDeDatosMosquitosUnoXUno
+    #Para ir moviendo se descomentan los siguientes y ajustando los grados segun convieniencia, recomendacion 45 por un numero siempre, ya que cada agujero estan cada 45 grados.
+
+    #retorno(45*2)
+
+    #gradosPosicion(45)
