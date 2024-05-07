@@ -1,7 +1,7 @@
 # import kivy
 from progPrueba import ejemplo as pP
-#from progParaInterfaz import mainPPI as pP
-#from progParaInterfaz2 import mainPPI as pP
+#from ProgParaInterfaz import mainPPI as pP
+#from ProgParaInterfaz2 import mainPPI as pP
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
@@ -81,7 +81,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     plt.plot(freqAltas, y[indices], 'ro', markersize=5)
                     #plt.grid(True)
                     direccion=self.qEnt.get()
-                    if direccion!=None:
+                    if not(direccion is None):
                         plt.savefig(direccion)
                     self.graficar()
                 elif A=="NuevoEstado":

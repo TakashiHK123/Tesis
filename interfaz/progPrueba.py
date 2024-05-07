@@ -54,7 +54,7 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
             if cierre.is_set():
                 raise KeyboardInterrupt('kk')
             #time.sleep(2)
-            if time.time()-tiempo >2:
+            if time.time()-tiempo >5:
                 print("nuevo grafico")
                 for i in range(1024):
                     y[i]=random.random()
@@ -64,6 +64,7 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
                 queueSal.put(x)
                 queueSal.put([500,400])
                 queueSal.put([40,80])
+                #queueSal.put("carpeta_pruebas\grafico.png")
                 queueSal.put(None)
                 tiempo=time.time()
 

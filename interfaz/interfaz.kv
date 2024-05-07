@@ -57,7 +57,7 @@ WindowManager:
         size_hint: .245,.0625
         pos_hint: {"center_x":0.125,"center_y":0.65625}
         disabled:not app.modoManual or not app.pCorriendo
-        text: "Ir al inicio"
+        text: "Detectar Mosquito"
         on_press: if app.pCorriendo: app.qSal.put("Posicion Inicial")
     Button: 
         size_hint: .245,.0625
