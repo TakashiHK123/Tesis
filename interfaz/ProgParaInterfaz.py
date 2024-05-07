@@ -512,13 +512,14 @@ def mainPPI(queueSal,queueEnt,cierre):
 
     except KeyboardInterrupt:
         c.stop()
+        for pin in StepPins:
+            GPIO.output(pin, False)
         GPIO.cleanup()
         print("Cleanup gpio")
         # hasRun=True
         print("Stop motor")
         # GPIO.output(succionFan, GPIO.LOW)
-        for pin in StepPins:
-            GPIO.output(pin, False)
+        
         cierre.clear()
 
 if __name__ == '__main__':

@@ -430,10 +430,17 @@ def mainPPI(queueSal,queueEnt,cierre):
     
     
     #######################################
+    global Modo
     Modo=queueEnt.get()
+    print(Modo)
+    global Accion
     Accion=None
+    global PosicionActual
     PosicionActual=0
+    detector = SoundDetector()
     def revisarEnt():
+        global Accion
+        global Modo
         if cierre.is_set():
             raise KeyboardInterrupt('cierre detectado')
         if not queueEnt.empty():
@@ -444,6 +451,7 @@ def mainPPI(queueSal,queueEnt,cierre):
                 Accion=A
     
     def posAbsoluta(angulo):
+        global PosicionActual
         if angulo>PosicionActual:
             gradosPosicion(angulo-PosicionActual,cierre)
         elif angulo<PosicionActual:
@@ -500,7 +508,7 @@ def mainPPI(queueSal,queueEnt,cierre):
                 queueSal.put("Grabando\nSonido")
                 # Uso de la clase SoundDetector
                 high_magnitude_freq = None
-                detector = SoundDetector()
+                
                 high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=2, repeat=False,cola=queueSal)  # Cambia el valor de input_device_index según tu dispositivo
                 print(high_magnitude_freq)
                 clasificacion = clasificar_frecuencia(high_magnitude_freq)
@@ -557,13 +565,14 @@ def mainPPI(queueSal,queueEnt,cierre):
 
     except KeyboardInterrupt:
         c.stop()
+        for pin in StepPins:
+            GPIO.output(pin, False)
         GPIO.cleanup()
         print("Cleanup gpio")
         # hasRun=True
         print("Stop motor")
         # GPIO.output(succionFan, GPIO.LOW)
-        for pin in StepPins:
-            GPIO.output(pin, False)
+        
         cierre.clear()
 
 if __name__ == '__main__':

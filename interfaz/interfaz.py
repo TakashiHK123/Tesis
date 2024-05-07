@@ -1,7 +1,7 @@
 # import kivy
-from progPrueba import ejemplo as pP
+#from progPrueba import ejemplo as pP
 #from ProgParaInterfaz import mainPPI as pP
-#from ProgParaInterfaz2 import mainPPI as pP
+from ProgParaInterfaz2 import mainPPI as pP
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
@@ -71,7 +71,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     x=self.qEnt.get()
                     freqAltas=self.qEnt.get()
                     indices=self.qEnt.get()
-                    self.frecD=max(freqAltas)
+                    self.frecD=int(max(freqAltas))
                     plt.clf()
                     plt.plot(x,y)
                     #plt.figure(figsize=(8, 4))
@@ -89,9 +89,9 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     self.estado=x
                     if x=="Clasificando\nMosquito":
                         if self.frecD>=550:
-                            contH+=1
+                            self.contH+=1
                         else:
-                            cotM+=1
+                            self.cotM+=1
                 elif A=="Imagen":
                     x=self.qEnt.get()
                     self.imagen=x
@@ -119,7 +119,8 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
             while(self.cerrar.is_set()):
                 pass
             while (not self.qEnt.empty()):
-                self.checkQueue()
+                #self.checkQueue()
+                self.qEnt.get()
             while (not self.qSal.empty()):
                 self.qSal.get()
             self.qEnt.close()
