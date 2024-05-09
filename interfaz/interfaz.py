@@ -91,7 +91,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                         if self.frecD>=550:
                             self.contH+=1
                         else:
-                            self.cotM+=1
+                            self.contM+=1
                 elif A=="Imagen":
                     x=self.qEnt.get()
                     self.imagen=x
