@@ -49,34 +49,49 @@ WindowManager:
         size_hint: .245,.125
         pos_hint: {"center_x":0.375,"center_y":0.75}
         text: ["Modo Automatico","Modo Manual"][app.modoManual]
+        disabled: app.ocupado
         on_press: 
             app.modoManual=not app.modoManual
             if app.pCorriendo:app.qSal.put(self.text)
-                    
+    
+
+    Label: #para mostrar errores
+        size_hint: .245,.125
+        pos_hint: {"center_x":0.125,"center_y":0.75}
+        text:app.error
+          
     Button: 
         size_hint: .245,.0625
         pos_hint: {"center_x":0.125,"center_y":0.65625}
-        disabled:not app.modoManual or not app.pCorriendo
+        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Detectar Mosquito"
-        on_press: if app.pCorriendo: app.qSal.put("Posicion Inicial")
+        on_press: 
+            if app.pCorriendo: app.qSal.put("Posicion Inicial")
+            if app.pCorriendo: app.ocupado=True
     Button: 
         size_hint: .245,.0625
         pos_hint: {"center_x":0.375,"center_y":0.65625}
-        disabled:not app.modoManual or not app.pCorriendo
+        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Grabar Audio"
-        on_press: if app.pCorriendo: app.qSal.put("Grabar Audio")
+        on_press:
+            if app.pCorriendo: app.qSal.put("Grabar Audio")
+            if app.pCorriendo: app.ocupado=True
     Button: 
         size_hint: .245,.0625
         pos_hint: {"center_x":0.625,"center_y":0.65625}
-        disabled:not app.modoManual or not app.pCorriendo
+        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Fotografiar"
-        on_press: if app.pCorriendo: app.qSal.put("Fotografiar")
+        on_press: 
+            if app.pCorriendo: app.qSal.put("Fotografiar")
+            if app.pCorriendo: app.ocupado=True
     Button: 
         size_hint: .245,.0625
         pos_hint: {"center_x":0.875,"center_y":0.65625}
-        disabled:not app.modoManual or not app.pCorriendo
+        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Soltar Mosquito"
-        on_press: if app.pCorriendo: app.qSal.put("Soltar Mosquito")
+        on_press: 
+            if app.pCorriendo:app.qSal.put("Soltar Mosquito")   
+            if app.pCorriendo:app.ocupado=True
 
 
     ###Lo que era SegundoWidget
@@ -120,29 +135,26 @@ WindowManager:
     Button:
         pos_hint:{"right":1,"top":0.7}
         size_hint: .1,.1
-        text: "Activar video"
-        disabled:True#not app.modoManual or not app.pCorriendo
+        text: ["Activar video","Parar video"][app.video]
+        disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video)
+        on_press: 
+            if app.pCorriendo and not app.video: app.qSal.put("video")
+            if app.pCorriendo and not app.video: app.ocupado=True
+            elif app.pCorriendo and app.video: app.qSal.put("pararVideo")
+            #app.videoCapture() 
+
     Button:
         pos_hint:{"right":1,"top":0.6}
         size_hint: .1,.1
         text: "Sacar Foto"
-        disabled:not app.modoManual or not app.pCorriendo
-        on_press: if app.pCorriendo: app.qSal.put("Fotografiar")
+        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
+        on_press: 
+            if app.pCorriendo: app.qSal.put("Fotografiar")
+            if app.pCorriendo: app.ocupado=True
 
-    TercerWidget:
-
-    
-<TercerWidget>
-
-    canvas:
-        
-        Rectangle:
-            #source: 'tinky.jpeg'
-            id:camara
-            source:app.imagen
+    Widget:
+        Image:
+            texture:app.texture
+            fit_mode: "contain"
             pos: root.width *0.01,root.height*0.1
-            #size: root.width*0.6,root.height*0.6
-            size:1080/2.4,700/2.4
-            #pantalla 480*320
-
-
+            size: root.width *0.89,root.height*0.89

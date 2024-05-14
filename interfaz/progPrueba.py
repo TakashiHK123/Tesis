@@ -3,6 +3,10 @@ import time
 import numpy as np
 import os
 import matplotlib.pyplot as plt
+import cv2 
+import sys
+
+
 #import signal
 
 # def handle_exit(sig, frame):
@@ -18,13 +22,15 @@ def prueba1():
 class FakeClass():
     def __init__(self) -> None:
         pass
-    def put(self,a):
+    def put(self,a=0):
         pass
-    def get(self,a):
+    def get(self,a=0):
         pass
     def is_set(self):
         pass
     def empty(self):
+        return True
+    def clear(self):
         pass
 
 
@@ -34,26 +40,48 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
     # signal.signal(signal.SIGTERM, handle_exit)  #probar en linux, en windows no funciona
     # signal.signal(signal.SIGINT, handle_exit)
     try:
+        img = cv2.imread("interfaz/tinky.jpeg")
+        #print(img[:10])
+        #print(1)
+        for i in img[10]:
+            i[0]=0
+            i[1]=254
+            i[2]=0
         if not os.path.exists("carpeta_pruebas"):
             os.makedirs("carpeta_pruebas")
         archivo=os.path.join("carpeta_pruebas", 'myfile.jpg')
-        plt.savefig(archivo)
+        # plt.plot([1,1.2],[4,5])
+        # plt.savefig(archivo)
+        #print(img)
+        cv2.imwrite(archivo, img)
+        #print(2)
         tiempo=time.time()
-        print("holaa")
+        #print("holaa")
         y=np.zeros(1024)
         x=np.zeros(1024)
         queueSal.put("NuevoEstado")
         queueSal.put("Iniciando")
         queueSal.put("Imagen")
-        queueSal.put("datos\mosquitos1_2024-03-05_01-26-23\imagen.jpg")
-
+        #queueSal.put("datos\mosquitos1_2024-03-05_01-26-23\imagen.jpg")
+        queueSal.put(img)
         while(True):   
             if not queueEnt.empty():
                 accion=queueEnt.get()
                 print(accion)
+                if accion!="video": queueSal.put("FinAccion")
+            if accion=="video":
+                accion=None
+                queueSal.put("video")
+                while(not cierre.is_set()):
+                    if not queueEnt.empty():
+                        #accion=queueEnt.get()
+                        if queueEnt.get()=="pararVideo":
+                            queueSal.put("pararVideo")
+                        break
+
             if cierre.is_set():
                 raise KeyboardInterrupt('kk')
-            #time.sleep(2)
+            time.sleep(2)
             if time.time()-tiempo >5:
                 print("nuevo grafico")
                 for i in range(1024):
@@ -67,14 +95,31 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
                 #queueSal.put("carpeta_pruebas\grafico.png")
                 queueSal.put(None)
                 tiempo=time.time()
-
+            if __name__ == '__main__':
+                break
+            time.sleep(.5)
+            for i in img[random.randint(200,500)]:
+                i[0]=0
+                i[1]=0
+                i[2]=254
+            try:
+                #while(not cv2.imwrite(archivo, img)):
+                #   print("error")
+                cv2.imwrite(archivo, img)
+            except:
+                print("error2")
+            #print(3)
+            queueSal.put("Imagen")
+            queueSal.put(img)
     except KeyboardInterrupt as e:
         print('exit handled')
         #queue.close()
+        #cv2.destroyAllWindows()
         print(e)
         #time.sleep(5)
         cierre.clear()
         #return None
+        #sys.exit()
         
 
 

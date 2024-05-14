@@ -1,14 +1,14 @@
 # import kivy
-#from progPrueba import ejemplo as pP
+from progPrueba import ejemplo as pP
 #from ProgParaInterfaz import mainPPI as pP
-from ProgParaInterfaz2 import mainPPI as pP
+#from ProgParaInterfaz2 import mainPPI as pP
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
     from kivy.app import App
     from kivy.uix.widget import Widget
     # from kivy.uix.button import Button
-    from kivy.properties import StringProperty,NumericProperty,BooleanProperty#,ObjectProperty
+    from kivy.properties import StringProperty,NumericProperty,BooleanProperty,ObjectProperty
     #from kivy.uix.gridlayout import GridLayout
     #from kivy.uix.floatlayout import FloatLayout
     from kivy.uix.boxlayout import BoxLayout
@@ -21,12 +21,22 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     from multiprocessing import Process, Queue, Event
     #from kivy.config import Config
     from kivy.core.window import Window
-    
+    import cv2
+    from kivy.graphics.texture import Texture
+    import numpy as np
 
-    
+
+    try:
+        img=cv2.imread("interfaz/tinky.jpeg")
+        buf1 = cv2.flip(img, 0)
+        buf = buf1.tobytes()#tostring()
+        image_texture = Texture.create(
+        size=(img.shape[1], img.shape[0]), colorfmt='bgr')
+        image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+    except:
+        image_texture=None
 
     plt.style.use("dark_background")
-
 
     class FirstWindow(Screen):
         pass
@@ -37,18 +47,19 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     class WindowManager(ScreenManager):
         pass
 
-    class TercerWidget(Widget):
-        pass
-
     class Innterfaz(App):
         pCorriendo=BooleanProperty(False)
         botonScript=StringProperty("Iniciar Script")
-        imagen=StringProperty("tinky.jpeg")
+        #imagen=StringProperty("")#"tinky.jpeg")
         contM=NumericProperty(0)
         contH=NumericProperty(0)
         estado = StringProperty('Trampa\nApagada')
         modoManual =BooleanProperty(True)
         frecD=NumericProperty(0)
+        error=StringProperty("")
+        ocupado=BooleanProperty(False)
+        video=BooleanProperty(False)
+        texture=ObjectProperty(image_texture)
         
 
         def graficar(self):
@@ -93,8 +104,51 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                         else:
                             self.contM+=1
                 elif A=="Imagen":
-                    x=self.qEnt.get()
-                    self.imagen=x
+                    frame=self.qEnt.get()
+                    if type(frame)==np.ndarray:
+                        #print(type(frame))
+                        buf1 = cv2.flip(frame, 0)
+                        buf = buf1.tobytes()#tostring()
+                        image_texture = Texture.create(
+                        size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+                        image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+                        self.texture=image_texture
+                    else:
+                        self.error+="Error con la imagen\n"
+                    
+                elif A=="FinAccion":
+                    self.ocupado=False
+
+                elif A=="video":
+                    self.cap = cv2.VideoCapture(0)
+                    if not self.cap.isOpened():
+                        self.error+="Error con la camara\n"
+                        print("Error: No se puede acceder a la cámara. ¿Está conectada correctamente?")
+                        self.qSal.put("Error")
+                        self.ocupado=False
+                    else:
+                        self.video=True
+                        Clock.schedule_interval(self.videoCapture, 1.0/20)
+                
+                elif A=="pararVideo":
+                    Clock.unschedule(self.videoCapture)
+                    self.cap.release()
+                    cv2.destroyAllWindows()
+                    self.ocupado=False
+                    self.video=False
+
+
+        def videoCapture(self,dt=0):
+            ret, frame = self.cap.read()
+            if not ret:
+                print("Error al leer el fotograma")
+                return
+            buf1 = cv2.flip(frame, 0)
+            buf = buf1.tobytes()#.tostring()
+            image_texture = Texture.create(
+                size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
+            image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+            self.texture=image_texture
 
 
         def iniciarPrograma(self):
@@ -103,11 +157,13 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.botonScript="Iniciar Script"
             else:
                 self.pCorriendo=1
+                self.ocupado=False
                 self.qEnt=Queue() 
                 self.qSal=Queue() 
                 self.cerrar=Event()
                 self.p=Process(target=pP,args=(self.qEnt,self.qSal,self.cerrar))
                 self.p.start()
+
                 self.botonScript="Cerrar Script"
                 self.qSal.put(["Modo Automatico","Modo Manual"][self.modoManual])
                 Clock.schedule_interval(self.checkQueue, 1)
@@ -125,7 +181,10 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.qSal.get()
             self.qEnt.close()
             self.qSal.close()
-            self.p.join()
+            self.p.join(1)
+            if self.p.is_alive():
+                self.p.terminate()
+                print("error al cerrar")
             self.pCorriendo=0
             self.estado='Trampa\nApagada'
 

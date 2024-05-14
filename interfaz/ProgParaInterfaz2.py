@@ -282,7 +282,7 @@ def mainPPI(queueSal,queueEnt,cierre):
 
         cv2.imwrite(ruta_imagen, frame_maximo)
         cap.release()
-        return ruta_imagen
+        return frame_maximo
     class SoundDetector:
         def __init__(self):
             self.CHANNELS = 1
@@ -503,7 +503,7 @@ def mainPPI(queueSal,queueEnt,cierre):
                     # deteccionMosquitoDentroDeLaCapsula()#Una vez detectado continua con el flujo
                 else:
                     revisarEnt()
-                
+                queueSal.put("FinAccion")
             if Modo=="Modo Automatico" or Accion=="Grabar Audio":
                 
 
@@ -544,14 +544,14 @@ def mainPPI(queueSal,queueEnt,cierre):
                 #     if os.path.exists(carpeta_fecha_actual):
                 #         shutil.rmtree(carpeta_fecha_actual)
                 #         print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
-
+                queueSal.put("FinAccion")
 
             if Modo=="Modo Automatico" or Accion=="Fotografiar":
                 if not posSuccionando:
                     succionar()
                     posSuccionando=True
                 
-                if uAccion!="Fotografiar":
+                if uAccion!="Fotografiar" or uAccion!="video":
                     #if compuertaPosicion != 0:
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
                     time.sleep(3)
@@ -569,10 +569,11 @@ def mainPPI(queueSal,queueEnt,cierre):
                     fechaGuardada = detector.obtener_fecha_guardada()
                 else:
                     fechaGuardada = "sinFecha"
-                dirFoto=capturar_foto(fechaGuardada,"MosquitoSinClasificar")
+                foto=capturar_foto(fechaGuardada,"MosquitoSinClasificar")
                 queueSal.put("Imagen")
-                queueSal.put(dirFoto)
+                queueSal.put(foto)
                 print('Se guarda la imagen del mosquito')
+                queueSal.put("FinAccion")
 
             if Modo=="Modo Automatico" or Accion=="Soltar Mosquito":
                 
@@ -601,6 +602,35 @@ def mainPPI(queueSal,queueEnt,cierre):
                     #retorno(grados * (compuertaPosicion + 2))
                     #compuertaPosicion = 0
                     #estadoDeteccion = True
+                queueSal.put("FinAccion")
+            
+
+            if Accion=="video":
+                if not posSuccionando:
+                    succionar()
+                    posSuccionando=True
+                
+                if uAccion!="Fotografiar" or uAccion!="video":
+                    #if compuertaPosicion != 0:
+                    GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
+                    time.sleep(3)
+                    posAbsoluta(grados*2)
+                    #gradosPosicion(grados * 1,cierre)  # Se mueve a la posicion de la camara verificar esto/////////
+                    GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
+                    time.sleep(2)
+                    queueSal.put("NuevoEstado")
+                    queueSal.put("Fotografiando")
+                
+                uAccion=Accion
+                Accion=None
+
+                queueSal.put("video")
+                while(not cierre.is_set()):
+                    if not queueEnt.empty():
+                        if queueEnt.get()=="pararVideo":
+                            queueSal.put("pararVideo")
+                        break
+
 
     except KeyboardInterrupt:
         c.stop()
