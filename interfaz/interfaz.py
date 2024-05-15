@@ -73,6 +73,10 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.root.get_screen('first').remove_widget(self.box)
             except:
                 pass #xd
+        
+        def mensajeError(self):
+            a=self.error.split("\n")
+            self.error="\n".join(a[-5:])
 
         def checkQueue(self,dt=0):
             if not self.qEnt.empty():
@@ -115,14 +119,17 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                         self.texture=image_texture
                     else:
                         self.error+="Error con la imagen\n"
+                        self.mensajeError()
+                        
                     
                 elif A=="FinAccion":
                     self.ocupado=False
 
                 elif A=="video":
-                    self.cap = cv2.VideoCapture(0)
+                    self.cap = cv2.VideoCapture(2)
                     if not self.cap.isOpened():
                         self.error+="Error con la camara\n"
+                        self.mensajeError()
                         print("Error: No se puede acceder a la cámara. ¿Está conectada correctamente?")
                         self.qSal.put("Error")
                         self.ocupado=False
