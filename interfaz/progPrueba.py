@@ -87,14 +87,16 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
                 for i in range(1024):
                     y[i]=random.random()
                     x[i]=i
-                queueSal.put("Graficar")
-                queueSal.put(y)
-                queueSal.put(x)
-                queueSal.put([500,400])
-                queueSal.put([40,80])
-                #queueSal.put("carpeta_pruebas\grafico.png")
-                queueSal.put(None)
+                # queueSal.put("Graficar")
+                # queueSal.put(y)
+                # queueSal.put(x)
+                # queueSal.put([500,400])
+                # queueSal.put([40,80])
+                # #queueSal.put("carpeta_pruebas\grafico.png")
+                # queueSal.put(None)
                 tiempo=time.time()
+                queueSal.put("Espectrograma")
+                queueSal.put(y)
             if __name__ == '__main__':
                 break
             time.sleep(.5)

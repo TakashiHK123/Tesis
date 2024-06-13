@@ -28,8 +28,14 @@ WindowManager:
         on_press:app.borrarGrafico()
     Label:
         text: "Frecuencia\nDominante:\n"+str(app.frecD)+"Hz"
-        size_hint: .1,.1
-        pos_hint: {"right":0.9,"top":.5}
+        size_hint: .2,.1
+        pos_hint: {"right":1,"top":.5}
+    Button:
+        text: "Tipo de Grafico:\n"+["Normal","Espectrograma 1","Espectrograma 2"][app.tipoDeGrafico]
+        size_hint: .2,.1
+        pos_hint: {"right":1,"top":.6}
+        disabled:not app.modoManual
+        on_press:app.tipoDeGrafico=(app.tipoDeGrafico+1)%3
 
     #Lo que era PrimerWidget
     Button: #cerrar interfaz
@@ -53,6 +59,7 @@ WindowManager:
         on_press: 
             app.modoManual=not app.modoManual
             if app.pCorriendo:app.qSal.put(self.text)
+            if not app.modoManual:app.tipoDeGrafico=0
     
 
     Label: #para mostrar errores
@@ -74,16 +81,17 @@ WindowManager:
         disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Grabar Audio"
         on_press:
-            if app.pCorriendo: app.qSal.put("Grabar Audio")
+            if app.pCorriendo: app.qSal.put(["Grabar Audio","Espectrograma","Espectrograma"][app.tipoDeGrafico])
             if app.pCorriendo: app.ocupado=True
     Button: 
         size_hint: .245,.0625
         pos_hint: {"center_x":0.625,"center_y":0.65625}
-        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
-        text: "Fotografiar"
+        text: ["Activar camara","Apagar camara"][app.video]
+        disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video)
         on_press: 
-            if app.pCorriendo: app.qSal.put("Fotografiar")
-            if app.pCorriendo: app.ocupado=True
+            if app.pCorriendo and not app.video: app.qSal.put("video")
+            if app.pCorriendo and not app.video: app.ocupado=True
+            elif app.pCorriendo and app.video: app.qSal.put("pararVideo")
     Button: 
         size_hint: .245,.0625
         pos_hint: {"center_x":0.875,"center_y":0.65625}
@@ -132,10 +140,11 @@ WindowManager:
         on_release: 
             app.root.current = "first"
             root.manager.transition.direction = "right"
+    
     Button:
-        pos_hint:{"right":1,"top":0.7}
+        pos_hint:{"right":1,"top":1}
         size_hint: .1,.1
-        text: ["Activar video","Parar video"][app.video]
+        text: ["Activar\ncamara","Apagar\ncamara"][app.video]
         disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video)
         on_press: 
             if app.pCorriendo and not app.video: app.qSal.put("video")
@@ -144,13 +153,37 @@ WindowManager:
             #app.videoCapture() 
 
     Button:
-        pos_hint:{"right":1,"top":0.6}
+        pos_hint:{"right":1,"top":0.8}
         size_hint: .1,.1
         text: "Sacar Foto"
-        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
+        disabled:not app.video or app.grabando
         on_press: 
-            if app.pCorriendo: app.qSal.put("Fotografiar")
-            if app.pCorriendo: app.ocupado=True
+            app.foto=True
+    
+    Button:
+        pos_hint:{"right":1,"top":0.9}
+        size_hint: .1,.1
+        text:  ["Grabar","Terminar"][app.grabando]
+        disabled:not app.video or app.foto
+        on_press: 
+            if not app.grabando:app.grabarVideo()
+            else : app.pararGrabacion()
+    
+    Button:
+        pos_hint:{"right":1,"top":0.7}
+        size_hint: .1,.1
+        text: "Guardar"
+        disabled:not app.foto
+        on_press: 
+            app.guardarImagen()
+
+    Button:
+        pos_hint:{"right":1,"top":0.6}
+        size_hint: .1,.1
+        text: "Descartar"
+        disabled:not app.foto
+        on_press: 
+            app.foto=False
 
     Widget:
         Image:

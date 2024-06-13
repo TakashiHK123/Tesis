@@ -24,6 +24,8 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     import cv2
     from kivy.graphics.texture import Texture
     import numpy as np
+    import librosa
+    import librosa.display
 
 
     try:
@@ -59,7 +61,11 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         error=StringProperty("")
         ocupado=BooleanProperty(False)
         video=BooleanProperty(False)
+        foto=BooleanProperty(False)
+        grabando=BooleanProperty(False)
+        tipoDeGrafico=NumericProperty(0)
         texture=ObjectProperty(image_texture)
+
         
 
         def graficar(self):
@@ -81,6 +87,28 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         def checkQueue(self,dt=0):
             if not self.qEnt.empty():
                 A=self.qEnt.get()
+                if A=="Espectrograma":
+                    x=self.qEnt.get()
+                    plt.clf()
+
+                    if self.tipoDeGrafico==2:
+                        spectrogram = librosa.stft(x)
+                        #plt.figure(figsize=(10, 5))
+                        librosa.display.specshow(librosa.power_to_db(np.abs(spectrogram)**2), sr=44100, x_axis='time', y_axis='log')
+                        #librosa.display.specshow(librosa.power_to_db(spectrogram), sr=44100, x_axis='time', y_axis='log')
+                        plt.title('Espectrograma')
+                        plt.colorbar(format='%+2.0fdb')
+                        plt.tight_layout()
+                    else:
+                        plt.specgram(x,NFFT=1024,Fs=44100)
+                        plt.xlabel('Tiempo (s)')
+                        plt.ylabel('Frecuencia (Hz)')
+                        plt.ylim(0, 3000)
+                    
+                    self.graficar()
+
+
+
                 if A=="Graficar":
                     y=self.qEnt.get()
                     x=self.qEnt.get()
@@ -94,6 +122,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     plt.ylabel('Magnitud')
                     plt.title('Espectro de Magnitud')
                     plt.plot(freqAltas, y[indices], 'ro', markersize=5)
+                    plt.xlim(0, 3000)
                     #plt.grid(True)
                     direccion=self.qEnt.get()
                     if not(direccion is None):
@@ -126,7 +155,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     self.ocupado=False
 
                 elif A=="video":
-                    self.cap = cv2.VideoCapture(2)
+                    self.cap = cv2.VideoCapture(0)
                     if not self.cap.isOpened():
                         self.error+="Error con la camara\n"
                         self.mensajeError()
@@ -138,24 +167,48 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                         Clock.schedule_interval(self.videoCapture, 1.0/20)
                 
                 elif A=="pararVideo":
-                    Clock.unschedule(self.videoCapture)
-                    self.cap.release()
-                    cv2.destroyAllWindows()
-                    self.ocupado=False
-                    self.video=False
+                    self.pararVideo()
 
+        def pararVideo(self):
+            Clock.unschedule(self.videoCapture)
+            self.cap.release()
+            cv2.destroyAllWindows()
+            self.ocupado=False
+            self.video=False
+            self.foto=False
+            if self.grabando:
+                self.pararGrabacion()
+
+        def guardarImagen(self):
+            cv2.imwrite("carpeta_pruebas\myfile.jpg",self.frame)
+            self.foto=False
+        
+        def grabarVideo(self):
+            self.grabacion = cv2.VideoWriter('videoSalida.avi',cv2.VideoWriter_fourcc(*'XVID'),20.0,(640,480))
+            self.grabando = True
+
+        def pararGrabacion(self):
+            try:
+                self.grabacion.release()
+            except:
+                pass
+
+            self.grabando = False
 
         def videoCapture(self,dt=0):
-            ret, frame = self.cap.read()
-            if not ret:
-                print("Error al leer el fotograma")
-                return
-            buf1 = cv2.flip(frame, 0)
-            buf = buf1.tobytes()#.tostring()
-            image_texture = Texture.create(
-                size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-            image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
-            self.texture=image_texture
+            if not self.foto:
+                ret, self.frame = self.cap.read()
+                if not ret:
+                    print("Error al leer el fotograma")
+                    return
+                buf1 = cv2.flip(self.frame, 0)
+                buf = buf1.tobytes()#.tostring()
+                image_texture = Texture.create(
+                    size=(self.frame.shape[1], self.frame.shape[0]), colorfmt='bgr')
+                image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
+                self.texture=image_texture
+                if self.grabando==True:
+                    self.grabacion.write(self.frame)
 
 
         def iniciarPrograma(self):
@@ -173,9 +226,12 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
 
                 self.botonScript="Cerrar Script"
                 self.qSal.put(["Modo Automatico","Modo Manual"][self.modoManual])
-                Clock.schedule_interval(self.checkQueue, 1)
+                Clock.schedule_interval(self.checkQueue, 1.0/5)
 
         def pararPrograma(self):
+            if self.video:
+                self.pararVideo()
+                
             Clock.unschedule(self.checkQueue)
             # self.p.terminate()
             self.cerrar.set()
@@ -190,8 +246,11 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
             self.qSal.close()
             self.p.join(1)
             if self.p.is_alive():
-                self.p.terminate()
+                #self.p.terminate()
+                self.p.kill()
                 print("error al cerrar")
+                self.error+="Error al cerrar\n"
+                self.mensajeError()
             self.pCorriendo=0
             self.estado='Trampa\nApagada'
 

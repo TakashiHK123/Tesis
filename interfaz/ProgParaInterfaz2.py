@@ -312,7 +312,9 @@ def mainPPI(queueSal,queueEnt,cierre):
                 frames = []
                 data = []
 
-                for i in range(0, int(self.RATE / self.CHUNK * self.RECORD_SECONDS)):
+                for i in range(0, int(self.RATE / self.CHUNK * self.RECCORD_SEONDS)):
+                    if cierre.is_set():
+                        raise KeyboardInterrupt('cierre detectado')
                     length, audio_data = stream.read()
                     frames.append(audio_data)
                     data.extend(np.frombuffer(audio_data, dtype=np.int16))
@@ -393,6 +395,34 @@ def mainPPI(queueSal,queueEnt,cierre):
         def get_default_input_device_index(self):
             # Devuelve el primer índice de dispositivo
             return 2
+
+        def Espectrograma(self,duracion=30):
+            
+            input_device_index = self.get_default_input_device_index()
+
+            stream = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=input_device_index)
+            stream.setchannels(self.CHANNELS)
+            stream.setrate(self.RATE)
+            stream.setformat(alsaaudio.PCM_FORMAT_S16_LE)
+            stream.setperiodsize(self.CHUNK)
+
+            print("Grabando...")
+
+            frames = []
+            data = []
+
+            for i in range(0, int(self.RATE / self.CHUNK * duracion)):
+                if cierre.is_set():
+                    raise KeyboardInterrupt('cierre detectado')
+                length, audio_data = stream.read()
+                frames.append(audio_data)
+                data.extend(np.frombuffer(audio_data, dtype=np.int16))
+
+            print("Fin de la grabación.")
+            stream.close()
+
+            queueSal.put("Espectrograma")
+            queueSal.put(data)
 
 
     def mapear_clasificacion(clasificacion):
@@ -504,13 +534,13 @@ def mainPPI(queueSal,queueEnt,cierre):
                 else:
                     revisarEnt()
                 queueSal.put("FinAccion")
-            if Modo=="Modo Automatico" or Accion=="Grabar Audio":
+            if Modo=="Modo Automatico" or Accion=="Grabar Audio" or Accion=="Espectrograma":
                 
 
                 if not posSuccionando:
                     succionar()
                     posSuccionando=True
-                if uAccion!="Grabar Audio":
+                if uAccion!="Grabar Audio" or uAccion!="Espectrograma":
                     #gradosPosicion(grados * 1,cierre)  # Se posiciona en la posicion en donde se encuentra el microfono para la deteccion
                     GPIO.output(pinSuccionador, GPIO.LOW)
                     posAbsoluta(grados * 1)
@@ -524,46 +554,49 @@ def mainPPI(queueSal,queueEnt,cierre):
                     # estadoDeteccion = False
                     # while not estadoDeteccion:
 
-                uAccion=Accion
-                Accion=None
+                
 
                 queueSal.put("NuevoEstado")
                 queueSal.put("Grabando\nSonido")
-                # Uso de la clase SoundDetector
-                high_magnitude_freq = None
-                
-                high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=2, repeat=False,cola=queueSal)  # Cambia el valor de input_device_index según tu dispositivo
-                print(high_magnitude_freq)
-                clasificacion = clasificar_frecuencia(high_magnitude_freq)
-                print(clasificacion)
-                #nombreMosquito=imprimir_clasificacion(clasificacion)
-                #compuertaPosicion = mapear_clasificacion(clasificacion)
-                # compuertaPosicion = 1
-                # if(compuertaPosicion is None):
-                #     carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
-                #     if os.path.exists(carpeta_fecha_actual):
-                #         shutil.rmtree(carpeta_fecha_actual)
-                #         print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
+                if Modo=="Modo Automatico" or Accion=="Grabar Audio":
+                    # Uso de la clase SoundDetector
+                    high_magnitude_freq = None
+                    
+                    high_magnitude_freq = detector.record_and_analyze("grabacion.wav", save_plot_filename="spectrogram.png", input_device_index=2, repeat=False,cola=queueSal)  # Cambia el valor de input_device_index según tu dispositivo
+                    print(high_magnitude_freq)
+                    clasificacion = clasificar_frecuencia(high_magnitude_freq)
+                    print(clasificacion)
+                    #nombreMosquito=imprimir_clasificacion(clasificacion)
+                    #compuertaPosicion = mapear_clasificacion(clasificacion)
+                    # compuertaPosicion = 1
+                    # if(compuertaPosicion is None):
+                    #     carpeta_fecha_actual = os.path.join("datos", detector.obtener_fecha_guardada())
+                    #     if os.path.exists(carpeta_fecha_actual):
+                    #         shutil.rmtree(carpeta_fecha_actual)
+                    #         print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
+                elif Accion=="Espectrograma":
+                    detector.espectrograma()
                 queueSal.put("FinAccion")
 
-            if Modo=="Modo Automatico" or Accion=="Fotografiar":
+                uAccion=Accion
+                Accion=None
+
+
+            if Modo=="Modo Automatico":
                 if not posSuccionando:
                     succionar()
                     posSuccionando=True
                 
-                if uAccion!="Fotografiar" or uAccion!="video":
-                    #if compuertaPosicion != 0:
-                    GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
-                    time.sleep(3)
-                    posAbsoluta(grados*2)
-                    #gradosPosicion(grados * 1,cierre)  # Se mueve a la posicion de la camara verificar esto/////////
-                    GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
-                    time.sleep(2)
-                    queueSal.put("NuevoEstado")
-                    queueSal.put("Fotografiando")
+                #if compuertaPosicion != 0:
+                GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
+                time.sleep(3)
+                posAbsoluta(grados*2)
+                #gradosPosicion(grados * 1,cierre)  # Se mueve a la posicion de la camara verificar esto/////////
+                GPIO.output(pinSuccionador, GPIO.HIGH)  # Paramos el succionador para sacarle una foto
+                time.sleep(2)
+                queueSal.put("NuevoEstado")
+                queueSal.put("Fotografiando")
                 
-                uAccion=Accion
-                Accion=None
                 
                 if(detector.obtener_fecha_guardada() is not None):
                     fechaGuardada = detector.obtener_fecha_guardada()
@@ -610,7 +643,7 @@ def mainPPI(queueSal,queueEnt,cierre):
                     succionar()
                     posSuccionando=True
                 
-                if uAccion!="Fotografiar" or uAccion!="video":
+                if uAccion!="video":
                     #if compuertaPosicion != 0:
                     GPIO.output(pinSuccionador, GPIO.LOW)  # Se activa el succionador
                     time.sleep(3)
@@ -630,6 +663,7 @@ def mainPPI(queueSal,queueEnt,cierre):
                         if queueEnt.get()=="pararVideo":
                             queueSal.put("pararVideo")
                         break
+            
 
 
     except KeyboardInterrupt:
