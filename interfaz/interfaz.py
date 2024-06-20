@@ -1,7 +1,7 @@
 # import kivy
-from progPrueba import ejemplo as pP
+# from progPrueba import ejemplo as pP
 #from ProgParaInterfaz import mainPPI as pP
-#from ProgParaInterfaz2 import mainPPI as pP
+from ProgParaInterfaz2 import mainPPI as pP
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
@@ -126,7 +126,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     self.ocupado=False
 
                 elif A=="video":
-                    self.cap = cv2.VideoCapture(2)
+                    self.cap = cv2.VideoCapture(0)
                     if not self.cap.isOpened():
                         self.error+="Error con la camara\n"
                         self.mensajeError()
