@@ -277,7 +277,7 @@ class SoundDetector:
         self.CHANNELS = 1
         self.RATE = 44100
         self.CHUNK = 512
-        self.RECORD_SECONDS = 3
+        self.RECORD_SECONDS = 10
         self.LOCALDATE = None
 
     def obtener_fecha_guardada(self):
@@ -421,6 +421,7 @@ if __name__ == '__main__':
             print('Se procede a la clasificacion del mosquito')
             # Configurar el microfono fuera de la funcion
             # Ejecutar el detector de frecuencia con la configuracion del microfono
+            time.sleep(5)
             compuertaPosicion = 0
             estadoDeteccion = False
             while not estadoDeteccion:
