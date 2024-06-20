@@ -126,7 +126,7 @@ if __name__ == '__main__' :
     #while not hasRun:
             #steps(grados_a_pasos(siguiente*compuerta))# parcourt un tour dans le sens horaire
             
-    #posicionExpulsion(siguiente*3)
+    #posicionExpulsion(siguiente*2)
     #GPIO.output(16, GPIO.LOW)  # Se activa el succionador
     #to90grados()
     #GPIO.output(16, GPIO.HIGH) # Se desactiva el succionador
