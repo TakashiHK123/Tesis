@@ -184,7 +184,8 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
             self.foto=False
         
         def grabarVideo(self):
-            self.grabacion = cv2.VideoWriter('videoSalida.avi',cv2.VideoWriter_fourcc(*'XVID'),20.0,(640,480))
+            #self.grabacion = cv2.VideoWriter('videoSalida.avi',cv2.VideoWriter_fourcc(*'XVID'),20.0,(640,480))
+            self.grabacion = cv2.VideoWriter('videoSalida.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 20.0, (640,480))
             self.grabando = True
 
         def pararGrabacion(self):

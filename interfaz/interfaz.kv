@@ -9,14 +9,20 @@ WindowManager:
 <FirstWindow>:
 	name: "first"
     id:first   
+    Widget:
+        Image:
+            source:"FIUNA.png"
+            fit_mode: "contain"
+            pos: root.width *0.82,root.height*0.7
+            size: root.width *0.2,root.height*0.2
     Label:
-        text: "First\nScreen"
+        text: "Página\nPrincipal"
         size_hint: .1,.1
         pos_hint: {"right":.9,"bottom":1}
     Button:
         size_hint: .1,.1
         pos_hint: {"right":1,"bottom":1}
-        text: "Next Screen"
+        text: "Cámara"
         #font_size: 16
         on_release: 
             app.root.current = "second"
@@ -24,14 +30,14 @@ WindowManager:
     Button:
         pos_hint:{"right":1,"top":0.2}
         size_hint: .1,.1
-        text: "Borrar\nGrafico"
+        text: "Borrar\nGráfico"
         on_press:app.borrarGrafico()
     Label:
         text: "Frecuencia\nDominante:\n"+str(app.frecD)+"Hz"
         size_hint: .2,.1
         pos_hint: {"right":1,"top":.5}
     Button:
-        text: "Tipo de Grafico:\n"+["Normal","Espectrograma 1","Espectrograma 2"][app.tipoDeGrafico]
+        text: "Tipo de Gráfico:\n"+["Normal","Espectrograma 1","Espectrograma 2"][app.tipoDeGrafico]
         size_hint: .2,.1
         pos_hint: {"right":1,"top":.6}
         disabled:not app.modoManual
@@ -86,7 +92,7 @@ WindowManager:
     Button: 
         size_hint: .245,.0625
         pos_hint: {"center_x":0.625,"center_y":0.65625}
-        text: ["Activar camara","Apagar camara"][app.video]
+        text: ["Activar cámara","Apagar cámara"][app.video]
         disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video)
         on_press: 
             if app.pCorriendo and not app.video: app.qSal.put("video")
@@ -128,15 +134,20 @@ WindowManager:
 
 <SecondWindow>:
 	name: "second"
-
+    Widget:
+        Image:
+            source:"FIUNA.png"
+            fit_mode: "contain"
+            pos: root.width *0.8825,root.height*0.1
+            size: root.width *0.135,root.height*0.135
     Label:
-        text: "Second\nScreen"
+        text: "Cámara"
         size_hint: .1,.1
         pos_hint: {"right":.9,"bottom":1}
     Button:
         size_hint: .1,.1
         pos_hint: {"right":1,"bottom":1}
-        text: "Go Back"
+        text: "Página\nPrincipal"
         on_release: 
             app.root.current = "first"
             root.manager.transition.direction = "right"
@@ -144,7 +155,7 @@ WindowManager:
     Button:
         pos_hint:{"right":1,"top":1}
         size_hint: .1,.1
-        text: ["Activar\ncamara","Apagar\ncamara"][app.video]
+        text: ["Activar\ncámara","Apagar\ncámara"][app.video]
         disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video)
         on_press: 
             if app.pCorriendo and not app.video: app.qSal.put("video")
