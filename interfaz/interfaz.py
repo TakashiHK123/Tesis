@@ -109,7 +109,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
 
 
 
-                if A=="Graficar":
+                elif A=="Graficar":
                     y=self.qEnt.get()
                     x=self.qEnt.get()
                     freqAltas=self.qEnt.get()
@@ -169,6 +169,11 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 elif A=="pararVideo":
                     self.pararVideo()
 
+                elif A=="cierrePorError":
+                    self.pararPrograma()
+                    self.error+="Error en el Script"
+
+
         def pararVideo(self):
             Clock.unschedule(self.videoCapture)
             self.cap.release()
@@ -215,7 +220,6 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         def iniciarPrograma(self):
             if self.pCorriendo:
                 self.pararPrograma()
-                self.botonScript="Iniciar Script"
             else:
                 self.pCorriendo=1
                 self.ocupado=False
@@ -254,6 +258,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.mensajeError()
             self.pCorriendo=0
             self.estado='Trampa\nApagada'
+            self.botonScript="Iniciar Script"
 
         def on_start(self):
             pass

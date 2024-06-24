@@ -575,7 +575,7 @@ def mainPPI(queueSal,queueEnt,cierre):
                     #         shutil.rmtree(carpeta_fecha_actual)
                     #         print(f"Carpeta {carpeta_fecha_actual} eliminada correctamente")
                 elif Accion=="Espectrograma":
-                    detector.espectrograma()
+                    detector.Espectrograma()
                 queueSal.put("FinAccion")
 
                 uAccion=Accion
@@ -666,7 +666,7 @@ def mainPPI(queueSal,queueEnt,cierre):
             
 
 
-    except KeyboardInterrupt:
+    except:# KeyboardInterrupt:
         c.stop()
         for pin in StepPins:
             GPIO.output(pin, False)
@@ -675,8 +675,12 @@ def mainPPI(queueSal,queueEnt,cierre):
         # hasRun=True
         print("Stop motor")
         # GPIO.output(succionFan, GPIO.LOW)
-        
+        if not cierre.is_set():
+            queueSal.put("cierrePorError")
+            while not cierre.is_set():
+                pass
         cierre.clear()
+            
 
 if __name__ == '__main__':
     mainPPI()
