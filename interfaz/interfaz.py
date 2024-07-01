@@ -26,6 +26,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     import numpy as np
     import librosa
     import librosa.display
+    import time
 
 
     try:
@@ -171,7 +172,8 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
 
                 elif A=="cierrePorError":
                     self.pararPrograma()
-                    self.error+="Error en el Script"
+                    self.error+="Error en el Script\n"
+                    self.mensajeError()
 
 
         def pararVideo(self):
@@ -240,22 +242,33 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
             Clock.unschedule(self.checkQueue)
             # self.p.terminate()
             self.cerrar.set()
+            tiempo=time.time()
+            aux=0
             while(self.cerrar.is_set()):
-                pass
+                if time.time()-tiempo >5:
+                    aux=1
+                    break
             while (not self.qEnt.empty()):
                 #self.checkQueue()
                 self.qEnt.get()
             while (not self.qSal.empty()):
                 self.qSal.get()
-            self.qEnt.close()
-            self.qSal.close()
-            self.p.join(1)
-            if self.p.is_alive():
-                #self.p.terminate()
+            if aux:
                 self.p.kill()
-                print("error al cerrar")
-                self.error+="Error al cerrar\n"
+                self.qEnt.close()
+                self.qSal.close()
+                self.error+="Cierre Forzdo (+5s)\n"
                 self.mensajeError()
+            else:
+                self.qEnt.close()
+                self.qSal.close()
+                self.p.join(1)
+                if self.p.is_alive():
+                    #self.p.terminate()
+                    self.p.kill()
+                    print("error al cerrar")
+                    self.error+="Error al cerrar\n"
+                    self.mensajeError()
             self.pCorriendo=0
             self.estado='Trampa\nApagada'
             self.botonScript="Iniciar Script"

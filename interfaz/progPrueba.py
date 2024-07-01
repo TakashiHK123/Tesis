@@ -65,6 +65,8 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
         #queueSal.put("datos\mosquitos1_2024-03-05_01-26-23\imagen.jpg")
         queueSal.put(img)
         while(True):   
+            # queueSal.put("Imagen")
+            # queueSal.put(img)
             if not queueEnt.empty():
                 accion=queueEnt.get()
                 print(accion)
@@ -81,7 +83,7 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
 
             if cierre.is_set():
                 raise KeyboardInterrupt('kk')
-            time.sleep(2)
+            #time.sleep(2)
             if time.time()-tiempo >5:
                 print("nuevo grafico")
                 for i in range(1024):
