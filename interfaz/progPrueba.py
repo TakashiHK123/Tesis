@@ -40,6 +40,22 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
     # signal.signal(signal.SIGTERM, handle_exit)  #probar en linux, en windows no funciona
     # signal.signal(signal.SIGINT, handle_exit)
     try:
+        l=[]
+        T=[]
+        # with open("/content/drive/MyDrive/p4/deteccionDeFrecTrampa/sinnada.txt","r") as a:
+        with open("interfaz/medSoloHembras2.txt","r") as a:
+        # with open("/content/drive/MyDrive/p4/deteccionDeFrecTrampa/medicionSoloMachos1.txt","r") as a:
+            for line in a:
+                try:
+                    val , t=line.split(" ")
+                    t=int(t)/1000000.0
+                    #if True:#
+                    if  t>=(0) and t<=(10):
+                        val =float(val)
+                        l.append(val)
+                        T.append(t)
+                except:
+                    pass
         img = cv2.imread("interfaz/tinky.jpeg")
         #print(img[:10])
         #print(1)
@@ -64,6 +80,8 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
         queueSal.put("Imagen")
         #queueSal.put("datos\mosquitos1_2024-03-05_01-26-23\imagen.jpg")
         queueSal.put(img)
+        queueSal.put('ADC')
+        queueSal.put(l)
         while(True):   
             # queueSal.put("Imagen")
             # queueSal.put(img)
@@ -84,21 +102,21 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass()):
             if cierre.is_set():
                 raise KeyboardInterrupt('kk')
             #time.sleep(2)
-            if time.time()-tiempo >5:
-                print("nuevo grafico")
-                for i in range(1024):
-                    y[i]=random.random()
-                    x[i]=i
-                # queueSal.put("Graficar")
-                # queueSal.put(y)
-                # queueSal.put(x)
-                # queueSal.put([500,400])
-                # queueSal.put([40,80])
-                # #queueSal.put("carpeta_pruebas\grafico.png")
-                # queueSal.put(None)
-                tiempo=time.time()
-                queueSal.put("Espectrograma")
-                queueSal.put(y)
+            # if time.time()-tiempo >5:
+            #     print("nuevo grafico")
+            #     for i in range(1024):
+            #         y[i]=random.random()
+            #         x[i]=i
+            #     # queueSal.put("Graficar")
+            #     # queueSal.put(y)
+            #     # queueSal.put(x)
+            #     # queueSal.put([500,400])
+            #     # queueSal.put([40,80])
+            #     # #queueSal.put("carpeta_pruebas\grafico.png")
+            #     # queueSal.put(None)
+            #     tiempo=time.time()
+            #     # queueSal.put("Espectrograma")
+            #     # queueSal.put(y)
             if __name__ == '__main__':
                 break
             time.sleep(.5)

@@ -32,17 +32,28 @@ WindowManager:
         size_hint: .1,.1
         text: "Borrar\nGráfico"
         on_press:app.borrarGrafico()
+    # Label:
+    #     text: "Frecuencia\nDominante:\n"+str(app.frecD)+"Hz"
+    #     size_hint: .2,.1
+    #     pos_hint: {"right":1,"top":.5}
     Label:
-        text: "Frecuencia\nDominante:\n"+str(app.frecD)+"Hz"
+        text: "Rango Hembras: "+["No","Si"][app.rangoH]+"\nRango Machos: "+["No","Si"][app.rangoM]
         size_hint: .2,.1
         pos_hint: {"right":1,"top":.5}
+    # Button:
+    #     text: "Tipo de Gráfico:\n"+["Normal","Espectrograma 1","Espectrograma 2"][app.tipoDeGrafico]
+    #     size_hint: .2,.1
+    #     pos_hint: {"right":1,"top":.6}
+    #     disabled:not app.modoManual
+    #     on_press:app.tipoDeGrafico=(app.tipoDeGrafico+1)%3
     Button:
-        text: "Tipo de Gráfico:\n"+["Normal","Espectrograma 1","Espectrograma 2"][app.tipoDeGrafico]
+        text: "Agitar Mosquitos"
         size_hint: .2,.1
         pos_hint: {"right":1,"top":.6}
-        disabled:not app.modoManual
-        on_press:app.tipoDeGrafico=(app.tipoDeGrafico+1)%3
-
+        disabled:not app.modoManual or app.ocupado or not app.pCorriendo
+        on_press: 
+            if app.pCorriendo: app.qSal.put("Agitar")
+            if app.pCorriendo: app.ocupado=True
     
     Button: #cerrar interfaz
         size_hint: .245,.125
@@ -82,12 +93,20 @@ WindowManager:
             if app.pCorriendo: app.qSal.put("Posicion Inicial")
             if app.pCorriendo: app.ocupado=True
     Button: 
-        size_hint: .245,.0625
-        pos_hint: {"center_x":0.375,"center_y":0.65625}
+        size_hint: .2,.1
+        pos_hint: {"right":1,"top":.4}
         disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Grabar Audio"
         on_press:
             if app.pCorriendo: app.qSal.put(["Grabar Audio","Espectrograma","Espectrograma"][app.tipoDeGrafico])
+            if app.pCorriendo: app.ocupado=True
+    Button:
+        size_hint: .245,.0625
+        pos_hint: {"center_x":0.375,"center_y":0.65625}
+        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
+        text: "Medir Frecuencia (Luz)"
+        on_press:
+            if app.pCorriendo: app.qSal.put("ADC")
             if app.pCorriendo: app.ocupado=True
     Button: 
         size_hint: .245,.0625
@@ -108,15 +127,26 @@ WindowManager:
             if app.pCorriendo:app.ocupado=True
 
 
-    
     Label:
-        size_hint: .125,.125
+        size_hint: .125/2,.125
         pos_hint: {"right":0.25,"top":1.025}
-        text: 'Cant. de Mosquitos Macho: '+ str(app.contM)
+        text: 'Cant. de cada grupo de mosquitos:'
     Label:
-        size_hint: .125,.125
-        pos_hint: {"right":0.75,"top":1.025}
-        text: 'Cant. de Mosquitos Hembra: '+str(app.contH)
+        size_hint: .125/2,.125
+        pos_hint: {"right":0.25/2+0.45,"top":1.025}
+        text: 'Machos: '+ str(app.contM)
+    Label:
+        size_hint: .125/2,.125
+        pos_hint: {"right":0.75/2+0.45,"top":1.025}
+        text: 'Hembras: '+str(app.contH)
+    Label:
+        size_hint: .125/2,.125
+        pos_hint: {"right":0.25+0.45,"top":1.025}
+        text: 'Mixto: '+ str(app.contMix)
+    Label:
+        size_hint: .125/2,.125
+        pos_hint: {"right":0.50+0.45,"top":1.025}
+        text: 'Nada: '+str(app.contNada)
     
     # Para mostrar el estado actual
     Label:    

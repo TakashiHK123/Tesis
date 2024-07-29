@@ -1,13 +1,46 @@
+RaspberryPi
 Configuraciones de los pines utilizados para cada actuador o sensor:
 
 - Actuadores
-    servoCompuertaPIN = 6
-    servoSelectorPIN = 13
-    StepPins = [17,18,27,22] Motor paso a paso
+    servoCompuertaPIN = 6   # fisico 31 PWM
+    servoSelectorPIN = 13  # fisico 33 PWM
+    StepPins = [17,18,27,22] Motor paso a paso   # fisico 11 12 13 15
 
 - Sensores Inflarrojos
-    Sensor inflarrojo compuerta pin_sensor = 5
-    Sensor Inflarrojo selector pin_sensor_selector = 26
+    Sensor inflarrojo compuerta pin_sensor = 5  # fisico 29
+    Sensor Inflarrojo selector pin_sensor_selector = 26  # fisico 37
 
 - Activador Soplador Relay
-    pin = Gpio 16
+    pin = Gpio 16  # fisico 36
+
+
+
+
+Pines en el orangePI:
+
+- Actuadores
+    
+    servoSelectorPIN = 21 (wpi) # PWM11 # fisico 32
+    StepPins = [18,24,26,27] (wpi) # Motor paso a paso # fisico [28,36,38,40]
+
+
+- Activador Soplador Relay
+    pin = 17 (wpi)  # fisico 27
+
+- Final de carrera = 2 (wpi)  # fisico 7
+
+
+- ADC 
+
+    SCLK = 25 (wpi)  # fisico 37
+    MISO = 22 (wpi)  # fisico 33
+    MOSI = 23 (wpi)  # fisico 35
+    DRDY = 20 (wpi)  # fisico 31
+    CS2 = 19  (wpi)  # fisico 29
+
+- Touch
+
+    SCLK = 14 (wpi)  # fisico 23
+    MISO = 12 (wpi)  # fisico 21
+    MOSI = 11 (wpi)  # fisico 19
+    CS0 = 15  (wpi)  # fisico 24

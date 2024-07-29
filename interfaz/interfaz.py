@@ -1,7 +1,8 @@
 # import kivy
-from progPrueba import ejemplo as pP
+# from progPrueba import ejemplo as pP
 #from ProgParaInterfaz import mainPPI as pP
 #from ProgParaInterfaz2 import mainPPI as pP
+from ProgOpi3b import mainPPI as pP
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
@@ -27,6 +28,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     import librosa
     import librosa.display
     import time
+    import os
 
 
     try:
@@ -56,22 +58,27 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         #imagen=StringProperty("")#"tinky.jpeg")
         contM=NumericProperty(0)
         contH=NumericProperty(0)
+        contMix=NumericProperty(0)
+        contNada=NumericProperty(0)
         estado = StringProperty('Trampa\nApagada')
         modoManual =BooleanProperty(True)
         frecD=NumericProperty(0)
+        compuerta=NumericProperty(1) #3 indefinido 2 macho 1 hembra
         error=StringProperty("")
         ocupado=BooleanProperty(False)
         video=BooleanProperty(False)
         foto=BooleanProperty(False)
         grabando=BooleanProperty(False)
-        tipoDeGrafico=NumericProperty(0)
+        tipoDeGrafico=NumericProperty(2)
         texture=ObjectProperty(image_texture)
+        rangoH =BooleanProperty(0)
+        rangoM =BooleanProperty(0)
 
         
 
         def graficar(self):
             self.borrarGrafico() # si no pongo esto se acumlan graficos encimados
-            self.box = BoxLayout(pos=(0,0),size_hint=(.8, .6))
+            self.box = BoxLayout(pos=(0,0.01),size_hint=(.8, .6))
             self.box.add_widget(FigureCanvasKivyAgg(plt.gcf()))
             self.root.get_screen('first').add_widget(self.box)
 
@@ -83,23 +90,53 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         
         def mensajeError(self):
             a=self.error.split("\n")
-            self.error="\n".join(a[-5:])
+            self.error="\n".join(a[-4:])
 
         def checkQueue(self,dt=0):
             if not self.qEnt.empty():
                 A=self.qEnt.get()
-                if A=="Espectrograma":
-                    x=self.qEnt.get()
+                if A=="Espectrograma" or A=="ADC":
+                    x=np.array(self.qEnt.get(),dtype=np.float32)
                     plt.clf()
-
-                    if self.tipoDeGrafico==2:
-                        spectrogram = librosa.stft(x)
-                        #plt.figure(figsize=(10, 5))
-                        librosa.display.specshow(librosa.power_to_db(np.abs(spectrogram)**2), sr=44100, x_axis='time', y_axis='log')
-                        #librosa.display.specshow(librosa.power_to_db(spectrogram), sr=44100, x_axis='time', y_axis='log')
+                    if A=="ADC":
+                        sr=3750
+                    else:
+                        sr=44100
+                    if self.tipoDeGrafico==2 or A=="ADC":
+                        if A=="ADC":
+                            n_fft=512
+                        else:
+                            n_fft=8192
+                        hop_length = n_fft // 4
+                        min_freq=300
+                        max_freq=1200
+                        spectrogram = librosa.stft(x, n_fft=n_fft, hop_length=hop_length,center=False)
+                        spectrogram_db = librosa.amplitude_to_db(np.abs(spectrogram))
+                        freqs = librosa.fft_frequencies(sr=sr, n_fft=spectrogram.shape[0] * 2 - 1)
+                        magMin=spectrogram_db.min()
+                        if A=="ADC":
+                            offset=35
+                            ruido=824
+                            spectrogram_db[np.where(~(((freqs >= min_freq ) & (freqs<=(824-offset))) | ((freqs <= max_freq) & (freqs>=(824+offset)) )))[0]]=magMin
+                        else:
+                            spectrogram_db[np.where(~((freqs >= min_freq ) & (freqs <= max_freq)))[0]]=magMin
+                        librosa.display.specshow(spectrogram_db,sr=sr, hop_length=hop_length, x_axis='time', y_axis='log')
+                        plt.ylim([min_freq, max_freq])
                         plt.title('Espectrograma')
                         plt.colorbar(format='%+2.0fdb')
                         plt.tight_layout()
+                        if A=="ADC":
+                            freqMachos=np.where((freqs >=700) & (freqs <= 1050))[0]
+                            freqHembras=np.where((freqs >=450) & (freqs <=650))[0]
+                            for i in spectrogram_db[freqMachos, :]:
+                                if i.max()>-7:
+                                    self.rangoM=1
+                                    break
+                            for i in spectrogram_db[freqHembras, :]:
+                                if i.max()>-5:
+                                    self.rangoH=1
+                                    break
+
                     else:
                         plt.specgram(x,NFFT=1024,Fs=44100)
                         plt.xlabel('Tiempo (s)')
@@ -132,11 +169,20 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 elif A=="NuevoEstado":
                     x=self.qEnt.get()
                     self.estado=x
+                    if x=="Fotografiando":
+                        self.qSal.put("Compuerta")
+                        self.qSal.put(self.compuerta)
                     if x=="Clasificando\nMosquito":
-                        if self.frecD>=550:
+                        if self.rangoH and self.rangoM:
+                            self.contMix+=1
+                        elif self.rangoH:
                             self.contH+=1
-                        else:
+                        elif self.rangoM:
                             self.contM+=1
+                        else:
+                            self.contNada+=1
+                        self.rangoH=0
+                        self.rangoM=0
                 elif A=="Imagen":
                     frame=self.qEnt.get()
                     if type(frame)==np.ndarray:
@@ -245,7 +291,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
             tiempo=time.time()
             aux=0
             while(self.cerrar.is_set()):
-                if time.time()-tiempo >5:
+                if time.time()-tiempo >10:
                     aux=1
                     break
             while (not self.qEnt.empty()):
@@ -257,7 +303,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.p.kill()
                 self.qEnt.close()
                 self.qSal.close()
-                self.error+="Cierre Forzdo (+5s)\n"
+                self.error+="Cierre Forzdo (+10s)\n"
                 self.mensajeError()
             else:
                 self.qEnt.close()
@@ -290,6 +336,7 @@ if __name__ == '__main__':
     # Config.set('graphics', 'height', '320')
     #Window.size = (480, 320)
     #Window.fullscreen = True
-    #Window.maximize()
+    Window.maximize()
+    #os.system("xrandr --output HDMI-1 --mode 720x480")
     Innterfaz().run()
 
