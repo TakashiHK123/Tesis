@@ -1,15 +1,13 @@
-# import kivy
-# from progPrueba import ejemplo as pP
-#from ProgParaInterfaz import mainPPI as pP
-#from ProgParaInterfaz2 import mainPPI as pP
-from ProgOpi3b import mainPPI as pP
+from progPrueba import ejemplo as pP
+#from ProgFinal import mainPPI as pP
+
 if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda ventana de kivy al ejecutar el Process,
                            # segun lo que lei en linux no deberia ser necesario, solo en windows
 
     from kivy.app import App
     from kivy.uix.widget import Widget
     # from kivy.uix.button import Button
-    from kivy.properties import StringProperty,NumericProperty,BooleanProperty,ObjectProperty
+    from kivy.properties import StringProperty,NumericProperty,BooleanProperty,ObjectProperty,ListProperty
     #from kivy.uix.gridlayout import GridLayout
     #from kivy.uix.floatlayout import FloatLayout
     from kivy.uix.boxlayout import BoxLayout
@@ -19,7 +17,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     from kivy.uix.screenmanager import ScreenManager, Screen 
     from kivy.lang import Builder
     from kivy.clock import Clock
-    from multiprocessing import Process, Queue, Event
+    from multiprocessing import Process, Queue, Event, Manager
     #from kivy.config import Config
     from kivy.core.window import Window
     import cv2
@@ -28,9 +26,89 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     import librosa
     import librosa.display
     import time
+    from scipy.signal import butter,filtfilt
     import os
+    import json
+    import threading,queue
+    from datetime import datetime
+    import wave
+
+    if not os.path.exists("mediciones"):
+        os.makedirs("mediciones")
+    
+    if not os.path.exists("mediciones/camara"):
+        os.makedirs("mediciones/camara")
+    
+    if not os.path.exists("mediciones/infrarrojo"):
+        os.makedirs("mediciones/infrarrojo")
+
+    if not os.path.exists("mediciones/microfono"):
+        os.makedirs("mediciones/microfono")
 
 
+    ConfigFile="interfaz/configfile.json"
+    if os.path.exists(ConfigFile):
+        with open(ConfigFile, 'r') as file:
+            # Load the JSON data from the file
+            json_data = json.load(file)
+    else:
+        json_data = {
+            "Posiciones":[0,1,2,10,3,3,3],
+            "Turbina":[1465,1400,1600],
+            "MosquitosAIngresar":1,
+            "Turbina+Camara":False,
+            "tipoDemedicion":0
+        }
+        with open(ConfigFile, 'w') as file:
+            # Dump the Python object as JSON to the file
+            json.dump(json_data, file, indent=4) # indent for pretty-printing
+
+
+    manager=Manager()
+
+
+    # bufferless VideoCapture
+    class VideoCapture:
+
+        def __init__(self, name):
+            self.cap = cv2.VideoCapture(name)
+            self.q = queue.Queue()
+            self.t = threading.Thread(target=self._reader)
+            self.t.daemon = True
+            self.t.start()
+
+        # read frames as soon as they are available, keeping only most recent one
+        def _reader(self):
+            try:
+                while True:
+                    ret, frame = self.cap.read()
+                    if not ret:
+                        break
+                    if not self.q.empty():
+                        try:
+                            self.q.get_nowait()   # discard previous (unprocessed) frame
+                        except queue.Empty:
+                            pass
+                    self.q.put(frame)
+            except:
+                pass#print("popo")
+
+        def read(self):
+            if self.q.empty():
+                return 0,0
+            return 1,self.q.get()
+        
+        def release(self):
+            try:
+                self.cap.release()
+                self.t.join()
+            except:
+                print("cagada")
+        
+        def isOpened(self):
+            return self.cap.isOpened()
+
+  
     try:
         img=cv2.imread("interfaz/tinky.jpeg")
         buf1 = cv2.flip(img, 0)
@@ -42,6 +120,11 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         image_texture=None
 
     plt.style.use("dark_background")
+    plt.rc('font', size=12)          # controls default text sizes
+    plt.rc('axes', titlesize=16)     # fontsize of the axes title
+    plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=14)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=13)    # fontsize of the tick labels
 
     class FirstWindow(Screen):
         pass
@@ -49,42 +132,108 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
     class SecondWindow(Screen):
         pass
 
+    class ThirdWindow(Screen):
+        pass
+
     class WindowManager(ScreenManager):
         pass
 
     class Innterfaz(App):
         pCorriendo=BooleanProperty(False)
-        botonScript=StringProperty("Iniciar Script")
-        #imagen=StringProperty("")#"tinky.jpeg")
+        botonScript=StringProperty("Iniciar Programa")
+        ultimaMedicion=StringProperty("nada")
+        ultimoGrafico=StringProperty("nada")
         contM=NumericProperty(0)
         contH=NumericProperty(0)
         contMix=NumericProperty(0)
+        fpsvideo=NumericProperty(20.0)
         contNada=NumericProperty(0)
+        guardado=BooleanProperty(False)
+        pasoEnCicloAutomatico=NumericProperty(0)
         estado = StringProperty('Trampa\nApagada')
         modoManual =BooleanProperty(True)
         frecD=NumericProperty(0)
-        compuerta=NumericProperty(1) #3 indefinido 2 macho 1 hembra
         error=StringProperty("")
         ocupado=BooleanProperty(False)
         video=BooleanProperty(False)
+        videoyadc=BooleanProperty(False)
         foto=BooleanProperty(False)
+        fotoCorrecta=BooleanProperty(False)
         grabando=BooleanProperty(False)
-        tipoDeGrafico=NumericProperty(2)
+        tipoDemedicion=NumericProperty(json_data["tipoDemedicion"])
         texture=ObjectProperty(image_texture)
+        plotADC=ObjectProperty()
         rangoH =BooleanProperty(0)
         rangoM =BooleanProperty(0)
+        Posiciones=ListProperty(json_data["Posiciones"])
+        turbina=manager.list()
+        for i in json_data["Turbina"]: #[1465,1400,1600]
+            turbina.append(i)
+        variablesCompartidas=manager.dict()
+        variablesCompartidas["MosquitosEnLaTrampa"]=0
+        variablesCompartidas["MosquitosAIngresar"]=json_data["MosquitosAIngresar"]
+        variablesCompartidas["Turbina+Camara"]=json_data["Turbina+Camara"]
+        variablesCompartidas["Salida"]=0
+        variablesCompartidas["Audio"]=None
+        variablesCompartidas["AudioGraf"]=None
+        variablesCompartidas["ADC"]=None
+        variablesCompartidas["graficoADC"]=None
+        variablesCompartidas["graficoAudio"]=None
+        variablesCompartidas["rangoH"]=None
+        variablesCompartidas["rangoM"]=None
+ 
+        def graficar(self,A):
+            self.ultimoGrafico=A
+            self.graficarKivy(A)
+            self.rangoH=self.variablesCompartidas["rangoH"]
+            self.rangoM=self.variablesCompartidas["rangoM"]
+            
+
+        def graficarKivy(self,A,dt=0):
+            self.borrarGrafico() # si no pongo esto se acumlan graficos encimados y se vuelve lento el programa
+            if A=="ADC":
+                grafico=self.variablesCompartidas["graficoADC"]
+            elif A=="Audio":
+                grafico=self.variablesCompartidas["graficoAudio"]
+            self.box = BoxLayout(size_hint=(1, 1))
+            self.box.add_widget(FigureCanvasKivyAgg(grafico))
+            # self.box.add_widget(FigureCanvasKivyAgg(plt.gcf()))
+            self.root.get_screen('first').ids.grafico.add_widget(self.box)
+
+            
+        def guardarMedicion(self):
+            fecha=self.fecha()
+            if self.ultimaMedicion=="Audio" or self.ultimaMedicion=="Audio+Infrarrojo":
+                wf = wave.open(f"mediciones/microfono/{fecha}.wav", 'wb')
+                wf.setnchannels(1)
+                wf.setsampwidth(2)  # 2 bytes para formato PCM_FORMAT_S16_LE
+                wf.setframerate(44100)
+                wf.writeframes(b''.join(self.variablesCompartidas["Audio"]))
+                wf.close()
+                self.variablesCompartidas["graficoAudio"].savefig(f"mediciones/microfono/{fecha}.png")
+            if self.ultimaMedicion=="ADC" or self.ultimaMedicion=="Audio+Infrarrojo" or self.ultimaMedicion=="Infrarrojo+Video":
+                with open(f"mediciones/infrarrojo/{fecha}.txt",'w') as file:
+                    for i in self.variablesCompartidas["ADC"]:
+                        file.write(str(i)+"\n")
+                self.variablesCompartidas["graficoADC"].savefig(f"mediciones/infrarrojo/{fecha}.png")
+            if self.ultimaMedicion=="Infrarrojo+Video":
+                try:
+                    os.rename(f"mediciones/camara/temporal.mp4", f"mediciones/camara/{fecha}.mp4")
+                except:
+                    pass
+            self.guardado=True
 
         
-
-        def graficar(self):
-            self.borrarGrafico() # si no pongo esto se acumlan graficos encimados
-            self.box = BoxLayout(pos=(0,0.01),size_hint=(.8, .6))
-            self.box.add_widget(FigureCanvasKivyAgg(plt.gcf()))
-            self.root.get_screen('first').add_widget(self.box)
+        def sgteLugar(self,x,op=1):
+            if op:
+                return [(x+1)%7,(-1),13][(x==6)+(x==-1)*2]
+            else:
+                return (x+1)%7+(x==6)*(-1)
 
         def borrarGrafico(self):
             try:
-                self.root.get_screen('first').remove_widget(self.box)
+                self.guardado=False
+                self.root.get_screen('first').ids.grafico.remove_widget(self.box)
             except:
                 pass #xd
         
@@ -95,83 +244,21 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         def checkQueue(self,dt=0):
             if not self.qEnt.empty():
                 A=self.qEnt.get()
-                if A=="Espectrograma" or A=="ADC":
-                    x=np.array(self.qEnt.get(),dtype=np.float32)
-                    plt.clf()
-                    if A=="ADC":
-                        sr=3750
+                if A=="Audio" or A=="ADC" or A=="Audio+Infrarrojo":
+                    self.ultimaMedicion=A
+                    self.graficar(A)
+                elif A=="Infrarrojo+Video":
+                    if self.grabando:
+                        self.pararVideo()
+                        self.ultimaMedicion=A
+                        self.graficar("ADC")
                     else:
-                        sr=44100
-                    if self.tipoDeGrafico==2 or A=="ADC":
-                        if A=="ADC":
-                            n_fft=512
-                        else:
-                            n_fft=8192
-                        hop_length = n_fft // 4
-                        min_freq=300
-                        max_freq=1200
-                        spectrogram = librosa.stft(x, n_fft=n_fft, hop_length=hop_length,center=False)
-                        spectrogram_db = librosa.amplitude_to_db(np.abs(spectrogram))
-                        freqs = librosa.fft_frequencies(sr=sr, n_fft=spectrogram.shape[0] * 2 - 1)
-                        magMin=spectrogram_db.min()
-                        if A=="ADC":
-                            offset=35
-                            ruido=824
-                            spectrogram_db[np.where(~(((freqs >= min_freq ) & (freqs<=(824-offset))) | ((freqs <= max_freq) & (freqs>=(824+offset)) )))[0]]=magMin
-                        else:
-                            spectrogram_db[np.where(~((freqs >= min_freq ) & (freqs <= max_freq)))[0]]=magMin
-                        librosa.display.specshow(spectrogram_db,sr=sr, hop_length=hop_length, x_axis='time', y_axis='log')
-                        plt.ylim([min_freq, max_freq])
-                        plt.title('Espectrograma')
-                        plt.colorbar(format='%+2.0fdb')
-                        plt.tight_layout()
-                        if A=="ADC":
-                            freqMachos=np.where((freqs >=700) & (freqs <= 1050))[0]
-                            freqHembras=np.where((freqs >=450) & (freqs <=650))[0]
-                            for i in spectrogram_db[freqMachos, :]:
-                                if i.max()>-7:
-                                    self.rangoM=1
-                                    break
-                            for i in spectrogram_db[freqHembras, :]:
-                                if i.max()>-5:
-                                    self.rangoH=1
-                                    break
-
-                    else:
-                        plt.specgram(x,NFFT=1024,Fs=44100)
-                        plt.xlabel('Tiempo (s)')
-                        plt.ylabel('Frecuencia (Hz)')
-                        plt.ylim(0, 3000)
+                        self.grabarVideo()
                     
-                    self.graficar()
-
-
-
-                elif A=="Graficar":
-                    y=self.qEnt.get()
-                    x=self.qEnt.get()
-                    freqAltas=self.qEnt.get()
-                    indices=self.qEnt.get()
-                    self.frecD=int(max(freqAltas))
-                    plt.clf()
-                    plt.plot(x,y)
-                    #plt.figure(figsize=(8, 4))
-                    plt.xlabel('Frecuencia (Hz)')
-                    plt.ylabel('Magnitud')
-                    plt.title('Espectro de Magnitud')
-                    plt.plot(freqAltas, y[indices], 'ro', markersize=5)
-                    plt.xlim(0, 3000)
-                    #plt.grid(True)
-                    direccion=self.qEnt.get()
-                    if not(direccion is None):
-                        plt.savefig(direccion)
-                    self.graficar()
                 elif A=="NuevoEstado":
                     x=self.qEnt.get()
                     self.estado=x
-                    if x=="Fotografiando":
-                        self.qSal.put("Compuerta")
-                        self.qSal.put(self.compuerta)
+                    
                     if x=="Clasificando\nMosquito":
                         if self.rangoH and self.rangoM:
                             self.contMix+=1
@@ -183,26 +270,12 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                             self.contNada+=1
                         self.rangoH=0
                         self.rangoM=0
-                elif A=="Imagen":
-                    frame=self.qEnt.get()
-                    if type(frame)==np.ndarray:
-                        #print(type(frame))
-                        buf1 = cv2.flip(frame, 0)
-                        buf = buf1.tobytes()#tostring()
-                        image_texture = Texture.create(
-                        size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
-                        image_texture.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
-                        self.texture=image_texture
-                    else:
-                        self.error+="Error con la imagen\n"
-                        self.mensajeError()
-                        
-                    
+                            
                 elif A=="FinAccion":
                     self.ocupado=False
 
-                elif A=="video":
-                    self.cap = cv2.VideoCapture(0)
+                elif A=="video" or A=="videoyadc":
+                    self.cap = VideoCapture(0)#VideoCapture('http://192.168.100.26:8080/video')
                     if not self.cap.isOpened():
                         self.error+="Error con la camara\n"
                         self.mensajeError()
@@ -210,35 +283,58 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                         self.qSal.put("Error")
                         self.ocupado=False
                     else:
-                        self.video=True
-                        Clock.schedule_interval(self.videoCapture, 1.0/20)
+                        if self.modoManual:
+                            self.video=True
+                            if A=="videoyadc":
+                                self.videoyadc=True
+                            Clock.schedule_interval(self.videoCapture, 1.0/self.fpsvideo)
+                            self.qSal.put("camaraPrendida")
+                            
+                        else:
+                            time.sleep(0.5)
+                            self.videoCapture()
+                            self.guardarImagen()
+                            self.qSal.put("pararVideo")
+                            
                 
                 elif A=="pararVideo":
                     self.pararVideo()
 
                 elif A=="cierrePorError":
                     self.pararPrograma()
-                    self.error+="Error en el Script\n"
+                    self.error+="Error en el Programa\n"
                     self.mensajeError()
 
 
         def pararVideo(self):
             Clock.unschedule(self.videoCapture)
             self.cap.release()
-            cv2.destroyAllWindows()
+            #cv2.destroyAllWindows()
             self.ocupado=False
             self.video=False
             self.foto=False
+            self.videoyadc=False
             if self.grabando:
                 self.pararGrabacion()
 
         def guardarImagen(self):
-            cv2.imwrite("carpeta_pruebas\myfile.jpg",self.frame)
+            if self.fotoCorrecta:
+                cv2.imwrite(f"mediciones/camara/{self.fecha()}.jpg",self.frame)
+            else:
+                self.error+="Error al guardar la foto\n"
+                self.mensajeError()
             self.foto=False
+            
         
         def grabarVideo(self):
             #self.grabacion = cv2.VideoWriter('videoSalida.avi',cv2.VideoWriter_fourcc(*'XVID'),20.0,(640,480))
-            self.grabacion = cv2.VideoWriter('videoSalida.mp4', cv2.VideoWriter_fourcc(*'MP4V'), 20.0, (640,480))
+            height, width, channels = self.frame.shape
+            if self.videoyadc==True:
+                self.direccionVideo=f"mediciones/camara/temporal.mp4"
+            else:
+                self.direccionVideo=f"mediciones/camara/{self.fecha()}.mp4"
+
+            self.grabacion = cv2.VideoWriter(self.direccionVideo, cv2.VideoWriter_fourcc(*'mp4v'), self.fpsvideo, (width,height))
             self.grabando = True
 
         def pararGrabacion(self):
@@ -251,9 +347,9 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
 
         def videoCapture(self,dt=0):
             if not self.foto:
-                ret, self.frame = self.cap.read()
-                if not ret:
-                    print("Error al leer el fotograma")
+                self.fotoCorrecta, self.frame = self.cap.read()
+                if not self.fotoCorrecta:
+                    #print("Error al leer el fotograma")
                     return
                 buf1 = cv2.flip(self.frame, 0)
                 buf = buf1.tobytes()#.tostring()
@@ -263,6 +359,29 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.texture=image_texture
                 if self.grabando==True:
                     self.grabacion.write(self.frame)
+
+        def cicloAutomatico(self,dt=0):
+            if not self.ocupado and self.pCorriendo:
+                if self.pasoEnCicloAutomatico==0:
+                    self.qSal.put("Posicion Inicial")
+                elif self.pasoEnCicloAutomatico==1:
+                    self.qSal.put("ADC")
+                elif self.pasoEnCicloAutomatico==2:
+                    self.guardarMedicion()
+                    self.qSal.put("video")
+                elif self.pasoEnCicloAutomatico==3:
+                    self.qSal.put("Soltar Mosquito") 
+                self.pasoEnCicloAutomatico=(self.pasoEnCicloAutomatico+1)%4
+                self.ocupado=True
+
+
+        def CambiarModo(self):
+            self.modoManual=not self.modoManual
+            if self.modoManual:
+                Clock.unschedule(self.cicloAutomatico)
+            else:
+                Clock.schedule_interval(self.cicloAutomatico, 1.0/2)
+                self.pasoEnCicloAutomatico=0
 
 
         def iniciarPrograma(self):
@@ -274,28 +393,32 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.qEnt=Queue() 
                 self.qSal=Queue() 
                 self.cerrar=Event()
-                self.p=Process(target=pP,args=(self.qEnt,self.qSal,self.cerrar))
+                self.p=Process(target=pP,args=(self.qEnt,self.qSal,self.cerrar,self.turbina,self.variablesCompartidas))
                 self.p.start()
 
-                self.botonScript="Cerrar Script"
-                self.qSal.put(["Modo Automatico","Modo Manual"][self.modoManual])
+                self.botonScript="Cerrar Programa"
+                if not self.modoManual:
+                    Clock.schedule_interval(self.cicloAutomatico, 1.0/2)
+                    self.pasoEnCicloAutomatico=0
                 Clock.schedule_interval(self.checkQueue, 1.0/5)
 
         def pararPrograma(self):
-            if self.video:
+            try:
                 self.pararVideo()
-                
+            except:
+                pass
             Clock.unschedule(self.checkQueue)
+            Clock.unschedule(self.cicloAutomatico)
+            
             # self.p.terminate()
             self.cerrar.set()
             tiempo=time.time()
             aux=0
             while(self.cerrar.is_set()):
-                if time.time()-tiempo >10:
+                if time.time()-tiempo >5:
                     aux=1
                     break
             while (not self.qEnt.empty()):
-                #self.checkQueue()
                 self.qEnt.get()
             while (not self.qSal.empty()):
                 self.qSal.get()
@@ -303,7 +426,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.p.kill()
                 self.qEnt.close()
                 self.qSal.close()
-                self.error+="Cierre Forzdo (+10s)\n"
+                self.error+="Cierre Forzdo (+5s)\n"
                 self.mensajeError()
             else:
                 self.qEnt.close()
@@ -316,27 +439,50 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     self.error+="Error al cerrar\n"
                     self.mensajeError()
             self.pCorriendo=0
+            self.ocupado=False
             self.estado='Trampa\nApagada'
-            self.botonScript="Iniciar Script"
+            self.botonScript="Iniciar Programa"
+
+        def save_json(self):
+            json_data["Posiciones"]=self.Posiciones
+            json_data["Turbina"]=[self.turbina[0],self.turbina[1],self.turbina[2]]
+            json_data["MosquitosAIngresar"]=self.variablesCompartidas["MosquitosAIngresar"]
+            json_data["Turbina+Camara"]=self.variablesCompartidas["Turbina+Camara"]
+            json_data["tipoDemedicion"]=self.tipoDemedicion
+            with open(ConfigFile, 'w') as file:
+                json.dump(json_data, file, indent=4) 
+
+        def fecha(self):
+            current_datetime = datetime.now()
+            return current_datetime.strftime("%Y-%m-%d %H-%M-%S")
+
+
+        def updateWid(self,dt=0):
+            self.root.get_screen('first').ids.MosquitosEnLaTrampa.text="Mosquitos en la trampa:\n\n"+str(self.variablesCompartidas["MosquitosEnLaTrampa"])
+
 
         def on_start(self):
+            Clock.schedule_interval(self.updateWid, 1.0)
             pass
 
         def on_stop(self):
+            Clock.unschedule(self.updateWid)
             if self.pCorriendo:
                 self.pararPrograma() 
+            self.save_json()
 
         def build(self):
             return Builder.load_file('interfaz.kv')
 
 
 if __name__ == '__main__':
+    
     # Config.set('graphics', 'resizable', '0')
     # Config.set('graphics', 'width', '480')
     # Config.set('graphics', 'height', '320')
-    #Window.size = (480, 320)
+    Window.size = (800, 600)
     #Window.fullscreen = True
-    Window.maximize()
+    #Window.maximize()
     #os.system("xrandr --output HDMI-1 --mode 720x480")
     Innterfaz().run()
 

@@ -31,33 +31,6 @@ int recivir(){
 	pulsePin();
 	return digitalRead(MISO);}
 
-void pruebaVel(){
-	int rep=10000000;
-	long comienzo=micros();
-	for (int i=0;i<rep;i++){
-		recivir();}
-	long tiempo=micros()-comienzo;
-	printf("\nfrec: MHz%f\n%f us por escritura\ntiempo: %f s\n",rep/((float)(tiempo)),tiempo/((float)(rep)),(float)tiempo/1000000);
-
-	comienzo=micros();
-	for (int i=0;i<rep;i++){
-		enviar(0);}
-	tiempo=micros()-comienzo;
-	printf("\nfrec: MHz%f\n%f us por escritura\ntiempo: %f s\n",rep/((float)(tiempo)),tiempo/((float)(rep)),(float)tiempo/1000000);
-	
-	
-	/*
-	    frec: MHz0.321776
-		3.107751 us por lectura
-		tiempo: 31.077509 s
-
-		frec: MHz0.240714
-		4.154307 us por escritura
-		tiempo: 41.543076 s
-
-	 */
-	
-}
 	
 void defFrecuencia(){
 	//SPS
@@ -136,12 +109,12 @@ int main(int argc, char *argv[])
 	seleccionADC();
 	defFrecuencia();
 	lecturaContinua();
-	
-	int n=37500;
+	unsigned long n = atoi(argv[1]);
+	//int n=37500;
 	double datos[n];
 	long tiempo=millis();
 	
-	for (int i=0;i<n;i++){
+	for (unsigned long i=0;i<n;i++){
 		while(digitalRead(DRDY)){}
 		datos[i]=leerADC();
 		while(!digitalRead(DRDY)){}
@@ -157,7 +130,7 @@ int main(int argc, char *argv[])
 	pinMode(MOSI, INPUT);
 	pinMode(CS2, INPUT);
 	
-	FILE *f = fopen("datosADCinterfaz.txt", "w");
+	FILE *f = fopen("interfaz/datosADCinterfaz.txt", "w");
 	if (f == NULL)
 	{
 		printf("Error opening file!\n");
@@ -170,6 +143,6 @@ int main(int argc, char *argv[])
 
 	fclose(f);
 	
-	//system("python3 graficar.py");
+
 	return 0;
 }

@@ -4,180 +4,306 @@ WindowManager:
     id:wm
 	FirstWindow:
 	SecondWindow:
+    ThirdWindow:
 
 
 <FirstWindow>:
 	name: "first"
     id:first   
+    
+    BoxLayout:
+        id:grafico
+        pos: root.width *0.175,root.height*0.02
+        size_hint:.625, .6
+
     Widget:
         Image:
-            source:"FIUNA.png"
+            source:"interfaz/FIUNA.png"
             fit_mode: "contain"
             pos: root.width *0.82,root.height*0.7
             size: root.width *0.2,root.height*0.2
     Label:
+        font_size: 17
         text: "Página\nPrincipal"
         size_hint: .1,.1
-        pos_hint: {"right":.9,"bottom":1}
+        pos_hint: {"right":1,"top":0.2}
+    Button:
+        font_size: 17
+        size_hint: .1,.1
+        pos_hint: {"right":0.9,"bottom":1}
+        text: "Config."
+        on_release: 
+            app.root.current = "third"
+            root.manager.transition.direction = "right"
     Button:
         size_hint: .1,.1
         pos_hint: {"right":1,"bottom":1}
         text: "Cámara"
-        #font_size: 16
+        font_size: 17
         on_release: 
             app.root.current = "second"
             root.manager.transition.direction = "left"
-    Button:
-        pos_hint:{"right":1,"top":0.2}
+    
+    #Button: 
+    #    pos_hint:{'right':.9,'top':0.2}
+    #    size_hint: .1,.1
+    #    text: 'Borrar\nGráfico'
+    #    font_size: 17
+    #    disabled:not len(root.ids.grafico.children) or not app.modoManual #si hay un grafico len es 1 y si no es 0
+    #    on_release:app.borrarGrafico()
+    Button: 
+        pos_hint:{"right":.9,"top":0.2}
         size_hint: .1,.1
-        text: "Borrar\nGráfico"
-        on_press:app.borrarGrafico()
-    # Label:
-    #     text: "Frecuencia\nDominante:\n"+str(app.frecD)+"Hz"
-    #     size_hint: .2,.1
-    #     pos_hint: {"right":1,"top":.5}
+        text: "Cambiar\nGráfico"
+        font_size: 17
+        disabled:not len(root.ids.grafico.children) or not app.ultimaMedicion=="Audio+Infrarrojo" #si hay un grafico len es 1 y si no es 0
+        on_release:   
+            if app.ultimoGrafico == "ADC": app.graficar("Audio")
+            else : app.graficar("ADC")
+
     Label:
         text: "Rango Hembras: "+["No","Si"][app.rangoH]+"\nRango Machos: "+["No","Si"][app.rangoM]
         size_hint: .2,.1
+        font_size: 17
         pos_hint: {"right":1,"top":.5}
-    # Button:
-    #     text: "Tipo de Gráfico:\n"+["Normal","Espectrograma 1","Espectrograma 2"][app.tipoDeGrafico]
-    #     size_hint: .2,.1
-    #     pos_hint: {"right":1,"top":.6}
-    #     disabled:not app.modoManual
-    #     on_press:app.tipoDeGrafico=(app.tipoDeGrafico+1)%3
+
     Button:
         text: "Agitar Mosquitos"
         size_hint: .2,.1
+        font_size: 17
         pos_hint: {"right":1,"top":.6}
-        disabled:not app.modoManual or app.ocupado or not app.pCorriendo
-        on_press: 
+        disabled:True#not app.modoManual or app.ocupado or not app.pCorriendo
+        on_release: 
             if app.pCorriendo: app.qSal.put("Agitar")
             if app.pCorriendo: app.ocupado=True
     
+    Button:
+        text: "Guardar\nMedición"
+        size_hint: .1,.1
+        font_size: 17
+        pos_hint: {"right":.9,"top":.3}
+        disabled:not len(root.ids.grafico.children) or not app.modoManual or app.guardado
+        on_release: 
+            app.guardarMedicion()
+    
+    
     Button: #cerrar interfaz
         size_hint: .245,.125
+        font_size: 17
         pos_hint: {"center_x":0.125,"center_y":0.875}
         text: "Cerrar Interfaz"
-        on_press:app.stop()
+        on_release:app.stop()
 
     Button: #iniciar/cerrar script
         size_hint: .245,.125
+        font_size: 17
         pos_hint: {"center_x":0.375,"center_y":0.875}
         text: app.botonScript 
-        on_press: 
+        on_release: 
             app.iniciarPrograma()
 
     Button: #selector de modo manual y automatico
         size_hint: .245,.125
+        font_size: 17
         pos_hint: {"center_x":0.375,"center_y":0.75}
         text: ["Modo Automatico","Modo Manual"][app.modoManual]
-        disabled: app.ocupado
-        on_press: 
-            app.modoManual=not app.modoManual
-            if app.pCorriendo:app.qSal.put(self.text)
-            if not app.modoManual:app.tipoDeGrafico=0
-    
+        disabled: False#app.ocupado
+        on_release: 
+            app.CambiarModo()
+  
 
     Label: #para mostrar errores
         size_hint: .245,.125
+        font_size: 17
         pos_hint: {"center_x":0.125,"center_y":0.74}
         text:app.error
           
     Button: 
         size_hint: .245,.0625
+        font_size: 17
         pos_hint: {"center_x":0.125,"center_y":0.65625}
         disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Detectar Mosquito"
-        on_press: 
+        on_release: 
             if app.pCorriendo: app.qSal.put("Posicion Inicial")
             if app.pCorriendo: app.ocupado=True
     Button: 
+        id:tipoDemedicion
         size_hint: .2,.1
+        font_size: 17
         pos_hint: {"right":1,"top":.4}
-        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
-        text: "Grabar Audio"
-        on_press:
-            if app.pCorriendo: app.qSal.put(["Grabar Audio","Espectrograma","Espectrograma"][app.tipoDeGrafico])
+        text: ["Grabar Audio","Audio+Infrarrojo","Infrarrojo+Video"][app.tipoDemedicion]
+        disabled:not app.modoManual or not app.pCorriendo or app.ocupado or (app.Posiciones[3]>8 and app.tipoDemedicion<2) or (app.Posiciones[1]>8 and app.tipoDemedicion==2)
+        on_release:
+            if app.pCorriendo and app.tipoDemedicion==0: app.qSal.put("Audio")
+            if app.pCorriendo and app.tipoDemedicion==1: app.qSal.put("Audio+Infrarrojo")
+            if app.pCorriendo and app.tipoDemedicion==2: app.qSal.put("Infrarrojo+Video")
             if app.pCorriendo: app.ocupado=True
+
+    Button:
+        text: "Cambiar\ntipo de\nMedición"
+        #line_height:.9
+        font_size: 17
+        size_hint: .1,.1
+        pos_hint: {"right":1,"top":.3}
+        on_release: 
+            app.tipoDemedicion=(app.tipoDemedicion+1)%3
+
+
     Button:
         size_hint: .245,.0625
+        font_size: 17
         pos_hint: {"center_x":0.375,"center_y":0.65625}
         disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Medir Frecuencia (Luz)"
-        on_press:
+        on_release:
             if app.pCorriendo: app.qSal.put("ADC")
             if app.pCorriendo: app.ocupado=True
     Button: 
         size_hint: .245,.0625
+        font_size: 17
         pos_hint: {"center_x":0.625,"center_y":0.65625}
         text: ["Activar cámara","Apagar cámara"][app.video]
-        disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video)
-        on_press: 
+        disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video) or (app.Posiciones[1]>8)
+        on_release: 
             if app.pCorriendo and not app.video: app.qSal.put("video")
             if app.pCorriendo and not app.video: app.ocupado=True
             elif app.pCorriendo and app.video: app.qSal.put("pararVideo")
     Button: 
         size_hint: .245,.0625
+        font_size: 17
         pos_hint: {"center_x":0.875,"center_y":0.65625}
         disabled:not app.modoManual or not app.pCorriendo or app.ocupado
         text: "Soltar Mosquito"
-        on_press: 
+        on_release: 
             if app.pCorriendo:app.qSal.put("Soltar Mosquito")   
             if app.pCorriendo:app.ocupado=True
 
 
     Label:
         size_hint: .125/2,.125
-        pos_hint: {"right":0.25,"top":1.025}
-        text: 'Cant. de cada grupo de mosquitos:'
+        font_size: 17
+        pos_hint: {"right":0.26,"top":1.025}
+        text: 'Cant. de cada grupo de mosquitos expulsado:'
     Label:
         size_hint: .125/2,.125
+        font_size: 17
         pos_hint: {"right":0.25/2+0.45,"top":1.025}
         text: 'Machos: '+ str(app.contM)
     Label:
         size_hint: .125/2,.125
+        font_size: 17
         pos_hint: {"right":0.75/2+0.45,"top":1.025}
         text: 'Hembras: '+str(app.contH)
     Label:
         size_hint: .125/2,.125
+        font_size: 17
         pos_hint: {"right":0.25+0.45,"top":1.025}
         text: 'Mixto: '+ str(app.contMix)
     Label:
         size_hint: .125/2,.125
+        font_size: 17
         pos_hint: {"right":0.50+0.45,"top":1.025}
         text: 'Nada: '+str(app.contNada)
     
     # Para mostrar el estado actual
     Label:    
-        size_hint: .49,.125
-        pos_hint: {"center_x":0.75,"center_y":0.75}
-        text: app.estado
-        #on_press: app.funcPrueba()
-        #on_release:app.graficar()
-        #on_state:app.graficar()
-    Label:  
-        size_hint: .49,.125
-        pos_hint: {"center_x":0.75,"center_y":0.875}
-        text: "Estado de la trampa"
+        size_hint: .15,.25
+        pos_hint: {"right":0.655,"top":0.93}
+        font_size: 17
+        text_size: self.size
+        halign: 'justify'
+        valign: 'top'
+        text: "Estado de\nla trampa:\n"+app.estado
+    
+    Label:    
+        id:MosquitosEnLaTrampa
+        size_hint: .12,.25
+        font_size: 17
+        pos_hint: {"right":0.805,"top":0.93}
+        text_size: self.size
+        halign: 'left'
+        valign: 'top'
+        text: "Mosquitos en la trampa:\n\n"+str(app.variablesCompartidas["MosquitosEnLaTrampa"])
+
+
+    Slider:
+        id: succionMinPWM
+        size_hint: .05,.45
+        pos_hint: {"right":0.075,"bottom":1}
+        min: 0
+        max: 100
+        step: 1
+        orientation: 'vertical'
+        #cursor_image: "tinky.jpeg"
+        on_value: app.turbina[0]=(self.max-self.value)/self.max *(1470-1440)+1440
+        value:self.max-(app.turbina[0]-1440)/(1470-1440)*self.max
+    Label:
+        text: str(round(root.ids.succionMinPWM.value))+"%"
+        size_hint: .05,.05
+        font_size: 17
+        pos_hint: {"right":0.075,"top":0.5}
+
+    Slider:
+        id: succionMaxPWM
+        size_hint: 0.05,.45
+        pos_hint: {"right":0.125,"bottom":1}
+        min: 0
+        max: 100
+        step: 1
+        orientation: 'vertical'
+        on_value: app.turbina[1]=(self.max-self.value)/self.max *(1450-1350)+1350
+        value:self.max-(app.turbina[1]-1350)/(1450-1350)*self.max
+    Label:
+        text: str(round(root.ids.succionMaxPWM.value))+"%"
+        size_hint: .05,.05
+        font_size: 17
+        pos_hint: {"right":0.125,"top":0.5}
+
+    Slider:
+        id: expulsionPWM
+        size_hint: 0.05,.45
+        pos_hint: {"right":0.175,"bottom":1}
+        min: 0
+        max: 100
+        step: 1
+        orientation: 'vertical'
+        on_value: app.turbina[2]=self.value/self.max *(1800-1500)+1500
+        value:(app.turbina[2]-1500)/(1800-1500)*self.max
+    Label:
+        text: str(round(root.ids.expulsionPWM.value))+"%"
+        size_hint: .05,.05
+        font_size: 17
+        pos_hint: {"right":0.175,"top":0.5}
+    
+    Label:
+        text:"Succión Mantenida\nSucción Entrada\nExpulsión"
+        text_size: (root.width/5,root.height/5)
+        halign: 'center'
+        font_size: 17
+        valign: 'middle'
+        size_hint: .2,.1
+        pos_hint: {"right":0.2,"top":0.610}
 
 
 <SecondWindow>:
 	name: "second"
     Widget:
         Image:
-            source:"FIUNA.png"
+            source:"interfaz/FIUNA.png"
             fit_mode: "contain"
             pos: root.width *0.8825,root.height*0.1
             size: root.width *0.135,root.height*0.135
     Label:
         text: "Cámara"
         size_hint: .1,.1
+        font_size: 17
         pos_hint: {"right":.9,"bottom":1}
     Button:
         size_hint: .1,.1
         pos_hint: {"right":1,"bottom":1}
         text: "Página\nPrincipal"
+        font_size: 17
         on_release: 
             app.root.current = "first"
             root.manager.transition.direction = "right"
@@ -185,46 +311,61 @@ WindowManager:
     Button:
         pos_hint:{"right":1,"top":1}
         size_hint: .1,.1
+        font_size: 17
         text: ["Activar\ncámara","Apagar\ncámara"][app.video]
-        disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video)
-        on_press: 
+        disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.video) or (app.Posiciones[1]>8)
+        on_release: 
             if app.pCorriendo and not app.video: app.qSal.put("video")
             if app.pCorriendo and not app.video: app.ocupado=True
-            elif app.pCorriendo and app.video: app.qSal.put("pararVideo")
+            elif app.pCorriendo and app.video and not app.videoyadc: app.qSal.put("pararVideo")
             #app.videoCapture() 
 
     Button:
         pos_hint:{"right":1,"top":0.8}
         size_hint: .1,.1
-        text: "Sacar Foto"
-        disabled:not app.video or app.grabando
-        on_press: 
+        text: "Sacar\nFoto"
+        font_size: 17
+        disabled:not app.video or app.grabando or app.videoyadc
+        on_release: 
             app.foto=True
     
     Button:
         pos_hint:{"right":1,"top":0.9}
         size_hint: .1,.1
+        font_size: 17
         text:  ["Grabar","Terminar"][app.grabando]
-        disabled:not app.video or app.foto
-        on_press: 
+        disabled:not app.video or app.foto or app.videoyadc
+        on_release: 
             if not app.grabando:app.grabarVideo()
             else : app.pararGrabacion()
     
     Button:
         pos_hint:{"right":1,"top":0.7}
         size_hint: .1,.1
+        font_size: 17
         text: "Guardar"
         disabled:not app.foto
-        on_press: 
+        on_release: 
             app.guardarImagen()
 
     Button:
         pos_hint:{"right":1,"top":0.6}
         size_hint: .1,.1
+        font_size: 17
         text: "Descartar"
         disabled:not app.foto
-        on_press: 
+        on_release: 
             app.foto=False
+
+    Button:
+        pos_hint:{"right":1,"top":0.5}
+        size_hint: .1,.1
+        font_size: 17
+        text: "Succión:\n"+["off","on"][app.variablesCompartidas["Turbina+Camara"]]
+        on_release:
+            app.variablesCompartidas["Turbina+Camara"]=not app.variablesCompartidas["Turbina+Camara"]
+            self.text="Succión:\n"+["off","on"][app.variablesCompartidas["Turbina+Camara"]]
+
 
     Widget:
         Image:
@@ -232,3 +373,212 @@ WindowManager:
             fit_mode: "contain"
             pos: root.width *0.01,root.height*0.1
             size: root.width *0.89,root.height*0.89
+
+<ThirdWindow>:
+    name: "third"
+    id:third 
+    Label:
+        text: "Página\nConfig."
+        size_hint: .1,.1
+        pos_hint: {"right":.9,"bottom":1}
+        font_size: 17
+    Button:
+        size_hint: .1,.1
+        pos_hint: {"right":1,"bottom":1}
+        text: "Página\nPrincipal"
+        font_size: 17
+        on_release: 
+            app.root.current = "first"
+            root.manager.transition.direction = "left"
+    Button:
+        size_hint: .1,.1
+        pos_hint: {"right":1,"top":0.2}
+        text: "Guardar\nCambios"
+        font_size: 17
+        disabled:app.pCorriendo
+        on_release: 
+            app.save_json()
+    #Label:
+    ##    text: "Parar Programa\npara guardar"
+    #    size_hint: .1,.1
+    #    disabled:not app.pCorriendo
+    #    pos_hint: {"right":.9,"top":0.2}
+
+    BoxLayout:
+        pos_hint: {"right":1,"top":1}
+        size_hint:.5, .5*1.5
+        Image:
+            source:"interfaz/trampa.png"
+            fit_mode: "fill"
+
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Cambiar con el programa apagado:"
+        size_hint: .25,0.1
+        pos_hint: {"right":.25,"top":1}
+
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Posición de la Entrada"
+        size_hint: .2,0.1
+        pos_hint: {"right":.2,"top":.9}
+    Button:
+        disabled:app.pCorriendo or True
+        size_hint: 0.05,0.1
+        font_size: 17
+        pos_hint: {"right":.25,"top":.9}
+        text: str(app.Posiciones[0])
+        on_release: 
+            app.Posiciones[0]= app.sgteLugar(app.Posiciones[0],0)
+    
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Posición de la Cámara"
+        size_hint: .2,0.1
+        pos_hint: {"right":.2,"top":0.8}
+    Button:
+        disabled:app.pCorriendo
+        size_hint: 0.05,0.1
+        font_size: 17
+        pos_hint: {"right":.25,"top":0.8}
+        text: ["/",str(app.Posiciones[1])][app.Posiciones[1]<9]        
+        on_release: 
+            app.Posiciones[1]= app.sgteLugar(app.Posiciones[1])
+            
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Posición del Infrarrojo"
+        size_hint: .2,0.1
+        pos_hint: {"right":.2,"top":.7}
+    Button:
+        size_hint: 0.05,0.1
+        font_size: 17
+        pos_hint: {"right":.25,"top":.7}
+        disabled:app.pCorriendo
+        text: ["/",str(app.Posiciones[2])][app.Posiciones[2]<9]
+        on_release: 
+            app.Posiciones[2]= app.sgteLugar(app.Posiciones[2],0)
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Posición del Micrófono"
+        size_hint: .2,0.1
+        pos_hint: {"right":.2,"top":.6}
+    Button:
+        size_hint: 0.05,0.1
+        pos_hint: {"right":.25,"top":.6}
+        disabled:app.pCorriendo
+        font_size: 17
+        text: ["/",str(app.Posiciones[3])][app.Posiciones[3]<9]
+        on_release: 
+            app.Posiciones[3]= app.sgteLugar(app.Posiciones[3])
+            
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Posición de la Salida General"
+        size_hint: .2,0.1
+        pos_hint: {"right":.2,"top":.5}
+    Button:
+        size_hint: 0.05,0.1
+        font_size: 17
+        pos_hint: {"right":.25,"top":.5}
+        disabled:app.pCorriendo
+        text: ["/",str(app.Posiciones[4])][app.Posiciones[4]<9]
+        on_release: 
+            app.Posiciones[4]= app.sgteLugar(app.Posiciones[4])
+    
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Posición de la Salida para Machos"
+        size_hint: .2,0.1
+        pos_hint: {"right":.2,"top":.4}
+    Button:
+        size_hint: 0.05,0.1
+        font_size: 17
+        pos_hint: {"right":.25,"top":.4}
+        disabled:app.pCorriendo
+        text: ["/",str(app.Posiciones[5])][app.Posiciones[5]<9]
+        on_release: 
+            app.Posiciones[5]= app.sgteLugar(app.Posiciones[5])
+    
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text: "Posición de la Salida para Hembras"
+        size_hint: .2,0.1
+        pos_hint: {"right":.2,"top":.3}
+    Button:
+        size_hint: 0.05,0.1
+        font_size: 17
+        pos_hint: {"right":.25,"top":.3}
+        disabled:app.pCorriendo
+        text: ["/",str(app.Posiciones[6])][app.Posiciones[6]<9]
+        on_release: 
+            app.Posiciones[6]= app.sgteLugar(app.Posiciones[6])
+
+    Label:
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        id:MosquitosAIngresar
+        text: "Mosquitos a Ingresar:"+str(app.variablesCompartidas["MosquitosAIngresar"])
+        size_hint: .21,0.1
+        pos_hint: {"right":.46,"top":.9}
+        
+    Button:
+        size_hint: 0.04,0.05
+        font_size: 17
+        pos_hint: {"right":.5,"top":.9}
+        text:"+"
+        on_release: 
+            if app.variablesCompartidas["MosquitosAIngresar"]!=15 :app.variablesCompartidas["MosquitosAIngresar"]+=1
+            root.ids.MosquitosAIngresar.text="Mosquitos a Ingresar:"+str(app.variablesCompartidas["MosquitosAIngresar"])
+    Button:
+        size_hint: 0.04,0.05
+        font_size: 17
+        pos_hint: {"right":.5,"top":.85}
+        text:"-"
+        on_release: 
+            if app.variablesCompartidas["MosquitosAIngresar"]!=1: app.variablesCompartidas["MosquitosAIngresar"]-=1
+            root.ids.MosquitosAIngresar.text="Mosquitos a Ingresar:"+str(app.variablesCompartidas["MosquitosAIngresar"])
+    
+    Button:
+        size_hint: 0.25,0.1
+        pos_hint: {"right":.5,"top":1}
+        text_size:self.size
+        font_size: 17
+        halign:'center'
+        valign:'middle'
+        text:"Restablecer velocidades\nde la turbina"
+        on_release: 
+            app.turbina[0]=1465 #[1465,1400,1600]
+            app.turbina[1]=1400
+            app.turbina[2]=1600
+            app.root.get_screen('first').ids.succionMinPWM.value=100-(app.turbina[0]-1440)/(1470-1440)*100
+            app.root.get_screen('first').ids.succionMaxPWM.value=100-(app.turbina[1]-1350)/(1450-1350)*100
+            app.root.get_screen('first').ids.expulsionPWM.value=(app.turbina[2]-1500)/(1800-1500)*100
+
+

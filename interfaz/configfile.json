@@ -1,0 +1,19 @@
+{
+    "Posiciones": [
+        0,
+        1,
+        2,
+        13,
+        3,
+        3,
+        3
+    ],
+    "Turbina": [
+        1465,
+        1400,
+        1593.0
+    ],
+    "MosquitosAIngresar": 5,
+    "Turbina+Camara": false,
+    "tipoDemedicion": 2
+}
