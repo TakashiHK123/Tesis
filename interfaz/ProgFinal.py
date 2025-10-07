@@ -13,11 +13,17 @@ import librosa
 import librosa.display
 from scipy.signal import butter,filtfilt
 import matplotlib.pyplot as plt
+import wave
 
 
 def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
     ############################################
-
+    plt.style.use("dark_background")
+    plt.rc('font', size=12)          # controls default text sizes
+    plt.rc('axes', titlesize=16)     # fontsize of the axes title
+    plt.rc('axes', labelsize=16)    # fontsize of the x and y labels
+    plt.rc('xtick', labelsize=14)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=13)    # fontsize of the tick labels
     ConfigFile="interfaz/configfile.json"
     with open(ConfigFile, 'r') as file:
         # Load the JSON data from the file
@@ -64,6 +70,23 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
 
     turbinaPWM(neutroPWM)
     
+    #Encoder magnetico
+    DEVICE_AS5600 = 0x36
+    fd = wiringpi.wiringPiI2CSetupInterface("/dev/i2c-2",DEVICE_AS5600)
+        
+    def ReadRawAngle(): # Read angle (0-360 represented as 0-4096)
+        read_bytes = (wiringpi.wiringPiI2CReadReg8(fd, 0x0C) & 31)<<8
+        read_bytes+= wiringpi.wiringPiI2CReadReg8(fd, 0x0D) #0000 1111 1111 1111
+        return ( read_bytes* 360.0) / 4096.0   
+    
+    posicionesAng={-1: 245.3, 0: 289.6, 1: 336.5, 2: 19.9+360, 3: 65.96+360, 4: 110.5+360, 5: 155.1+360, 6: 200.3+360, "prohibido":220}
+
+    def Angulo():
+        ang=ReadRawAngle()
+        if ang<posicionesAng["prohibido"]:
+            return ang+360
+        return ang
+    
     #stepper
     microsteps=16
     StepsPerRev=200*microsteps
@@ -81,7 +104,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
     wiringpi.pinMode(DIR, GPIO.OUTPUT)
 
     def setVel(vel):#grados/segundo
-        global Tus
+        global Tus #tiempo en microsegundos
         Tus=int(1/(vel/360*(StepsPerRev))*500000)
 
     setVel(60)
@@ -99,34 +122,44 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                 raise KeyboardInterrupt('cierre detectado')
             
 
-    def goToPos(pos=0):    
+    def goToPos(pos=0,encoder=1): 
+        NuevoEstado("Cámara en movimiento")   
         global posActual
-        if pos==posActual or pos>6 or pos <-1:
+        if (pos==posActual and not encoder) or pos>6 or pos <-1:
             return
         wiringpi.digitalWrite(ENABLE, False)
         wiringpi.delay(200)
-        if posActual==None:
-            direction=True
-            pos=0
+        if encoder:
+            obj=posicionesAng[pos]
+            ang=Angulo()
+            while(abs(ang-obj)>0.5):
+                direction=ang>obj
+                step(4,direction)
+                ang=Angulo()
         else:
-            direction= posActual>pos
-            dif=abs(posActual-pos)
-        if pos==0:
-            wiringpi.digitalWrite(DIR, direction)
-            if not wiringpi.digitalRead(ENDSTOP):
-                step(50,0)
-            for i in range(StepsPerRev):
-                if not wiringpi.digitalRead(ENDSTOP): 
-                    if direction:
-                        step(16)
-                    else:
-                        step(34,0)
-                    break
-                step(1,direction)
-        else:
-            step(int(dif*400),direction)
+            if posActual==None:
+                direction=True
+                pos=0
+            else:
+                direction= posActual>pos
+                dif=abs(posActual-pos)
+            if pos==0:
+                wiringpi.digitalWrite(DIR, direction)
+                if not wiringpi.digitalRead(ENDSTOP):
+                    step(50,0)
+                for i in range(StepsPerRev):
+                    if not wiringpi.digitalRead(ENDSTOP): 
+                        if direction:
+                            step(16)
+                        else:
+                            step(34,0)
+                        break
+                    step(1,direction)
+            else:
+                step(int(dif*400),direction)
 
         posActual=pos
+        NuevoEstado("Posición alcanzada")
         wiringpi.delay(200)
         wiringpi.digitalWrite(ENABLE, True)
 
@@ -225,6 +258,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                 pass
             out=leerADC()
             if out>threshold or out<-threshold:
+                
                 SDATAC()
                 wiringpi.digitalWrite(CS2, True)
                 wiringpi.pinMode(SCLK, GPIO.INPUT)
@@ -242,18 +276,26 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
         with open("interfaz/datosADCinterfaz.txt","r") as a:
             for line in a:
                 l.append(float(line))
-        variablesCompartidas["ADC"] =  np.array(l)
-        graficar("ADC")
+        # variablesCompartidas["ADC"] =  np.array(l)
+        global ADCdata
+        ADCdata=np.array(l)
+        # graficar("ADC")
 
     def Audio(duracion=10):
         CHANNELS = 1
         RATE = 44100
         CHUNK = 512
         try:
-            stream = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=2)
+            cont=0
+            for i in alsaaudio.cards():
+                if i== 'HIDMediak':
+                    cardindex=cont
+                    break
+                cont+=1
+            stream = alsaaudio.PCM(alsaaudio.PCM_CAPTURE, alsaaudio.PCM_NORMAL, cardindex=cardindex)
         except:
-            queueSal.put("NuevoEstado")
-            queueSal.put("No hay\nMicrofono")
+            queueSal.put("error")
+            queueSal.put("No hay Microfono")
             return 0
         stream.setchannels(CHANNELS)
         stream.setrate(RATE)
@@ -274,9 +316,19 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
 
         print("Fin de la grabación.")
         stream.close()
-        variablesCompartidas["Audio"]=frames
-        variablesCompartidas["AudioGraf"]=np.array(data,dtype=np.float32)
-        graficar("Audio")
+        # variablesCompartidas["Audio"]=frames
+
+        wf = wave.open(f"interfaz/wavtemp.wav", 'wb')
+        wf.setnchannels(1)
+        wf.setsampwidth(2)  # 2 bytes para formato PCM_FORMAT_S16_LE
+        wf.setframerate(44100)
+        wf.writeframes(b''.join(frames))
+        wf.close()
+
+        #variablesCompartidas["AudioGraf"]=np.array(data,dtype=np.float32)
+        global AudioData
+        AudioData=np.array(data,dtype=np.float32)
+        # graficar("Audio")
         return 1
     
     def graficar(A):
@@ -287,11 +339,13 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
         if A=="ADC":
             plt.figure(1)
             sr=3750
-            x=variablesCompartidas["ADC"][1:]
+            # x=variablesCompartidas["ADC"][1:]
+            x=ADCdata[1:]
         else:
             plt.figure(2)
             sr=44100
-            x=variablesCompartidas["AudioGraf"]  
+            # x=variablesCompartidas["AudioGraf"]  
+            x=AudioData
         plt.clf()
 
         if A=="ADC":
@@ -301,8 +355,8 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
             b, a = butter(6, [low, high], btype='band')
             x = filtfilt(b, a, x)
         
-            b, a = butter(7, [820/ nyquist, 830/ nyquist], btype='bandstop')
-            x = filtfilt(b, a, x)
+            #b, a = butter(7, [820/ nyquist, 830/ nyquist], btype='bandstop')
+            #x = filtfilt(b, a, x)
         
         if A=="ADC":
             n_fft=512
@@ -351,11 +405,15 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
             variablesCompartidas["rangoM"]=rangoM
 
         if A=="ADC":
-            variablesCompartidas["graficoADC"]=plt.gcf()
+            plt.savefig("interfaz/ADCtemp.png")
+            # variablesCompartidas["graficoADC"]=plt.gcf()
         if A=="Audio":
-            variablesCompartidas["graficoAudio"]=plt.gcf()
+            plt.savefig("interfaz/Audiotemp.png")
+            # variablesCompartidas["graficoAudio"]=plt.gcf()
 
-
+    def NuevoEstado(texto):
+        queueSal.put("NuevoEstado")
+        queueSal.put(texto)
     #######################################
     
     global Accion
@@ -378,12 +436,12 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
             Accion=A
         return 0
 
-    queueSal.put("NuevoEstado")
-    queueSal.put("Trampa\nEncendida")
+    NuevoEstado("Iniciando") 
     time.sleep(3.5)
 
     try:
         goToPos()
+        NuevoEstado("Posicion Inicial")
         while True:
             revisarEnt()
             if variablesCompartidas["MosquitosEnLaTrampa"]>0:
@@ -392,15 +450,11 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
             if Accion=="Posicion Inicial":
                 
                 goToPos(PosicionEntrada)
-                queueSal.put("NuevoEstado")
-                queueSal.put("Iniciando")
                     
                 turbinaPWM(succionMaxPWM())
-                queueSal.put("NuevoEstado")
-                queueSal.put("Detectando\nMosquitos")
+                NuevoEstado("Detectando\nMosquitos")
                 if(deteccionMosquito()):  # No pasa de esta linea hasta que entre un mosquito
-                    queueSal.put("NuevoEstado")
-                    queueSal.put("Mosquito\nDetectado")
+                    NuevoEstado("Mosquitos\nDetectados")
                     #wiringpi.delay(100)
                     turbinaPWM(succionMinPWM())   
                 else:
@@ -419,32 +473,33 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                 print("Para el succionador")
                 turbinaPWM(neutroPWM)
                 time.sleep(1)
-                print('Se procede a la clasificacion del mosquito')
                     
                 if Accion=="Audio":
-                    queueSal.put("NuevoEstado")
-                    queueSal.put("Grabando\nSonido")
+                    NuevoEstado("Grabando\nSonido")
                     if Audio():
+                        graficar("Audio")
                         queueSal.put("Audio")
 
                 elif Accion=="ADC":
-                    queueSal.put("NuevoEstado")
-                    queueSal.put("Leyendo\nADC")
+                    NuevoEstado("Leyendo\nADC")
                     Opt101ADC()
+                    graficar("ADC")
                     queueSal.put("ADC")
                 
                 elif Accion=="Audio+Infrarrojo":
-                    queueSal.put("NuevoEstado")
-                    queueSal.put("Grabando\nSonido y señal infrarroja")
+                    NuevoEstado("Grabando\nSonido y señal infrarroja")
                     t = threading.Thread(target=Opt101ADC)
                     t.daemon = True
                     t.start()
                     k=Audio()
                     t.join()
+                    graficar("ADC")
                     if k:
+                        graficar("Audio")
                         queueSal.put("Audio+Infrarrojo")
                     else:
                         queueSal.put("ADC")
+                NuevoEstado("Medición completada")
                 
                 if variablesCompartidas["MosquitosEnLaTrampa"]>0:
                     turbinaPWM(succionMinPWM())
@@ -452,8 +507,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
 
             if Accion=="Soltar Mosquito":
 
-                queueSal.put("NuevoEstado")
-                queueSal.put("Clasificando\nMosquito")
+                NuevoEstado("Clasificando\nMosquitos")
                 if variablesCompartidas["MosquitosEnLaTrampa"]>0:
                     turbinaPWM(succionMinPWM())
                 if variablesCompartidas["Salida"]==0:    
@@ -463,7 +517,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                 elif variablesCompartidas["Salida"]==2:
                     goToPos(PosicionSalidaMachos)
                 turbinaPWM(expulsionPWM())
-
+                NuevoEstado("Liberando Mosquitos")
                 aux=time.time()
                 while(time.time()-aux<10):
                     if cierre.is_set():
@@ -472,6 +526,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                 variablesCompartidas["MosquitosEnLaTrampa"]=0
                 turbinaPWM(neutroPWM)
                 finAccion()
+                NuevoEstado("Mosquitos liberados")
                 
             
             if Accion=="Agitar":
@@ -484,8 +539,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                     turbinaPWM(succionMinPWM())
                 goToPos(PosicionCamara)
 
-                queueSal.put("NuevoEstado")
-                queueSal.put("Camara\nPrendida")
+                NuevoEstado("En Posición de la cámara")
                 
                 uAccion=Accion
                 Accion=None
@@ -511,8 +565,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                     turbinaPWM(succionMinPWM())
                 goToPos(PosicionCamara)
 
-                queueSal.put("NuevoEstado")
-                queueSal.put("Grabando video y señal infrarroja")
+                NuevoEstado("Grabando video y señal infrarroja")
                 turbinaPWM(neutroPWM)
                 queueSal.put("videoyadc")
                 ok=1
@@ -526,13 +579,16 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                         elif kk=="camaraPrendida":
                             ok=1
                             time.sleep(1)
-                            queueSal.put("Infrarrojo+Video")                       
+                            queueSal.put("Infrarrojo+Video1")                       
                         break
                 if cierre.is_set():
                     ok=0
                 if ok:
                     Opt101ADC()
+                    queueSal.put("pararVideo")
+                    graficar("ADC")
                     queueSal.put("Infrarrojo+Video")
+                NuevoEstado("Grabación completada")
                 finAccion()
 
 
@@ -552,6 +608,3 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                 pass
         cierre.clear()
             
-
-if __name__ == '__main__':
-    mainPPI()

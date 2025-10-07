@@ -122,8 +122,10 @@ def ejemplo(queueSal=FakeClass(),queueEnt=FakeClass(),cierre=FakeClass(),turbina
             variablesCompartidas["rangoM"]=rangoM
 
         if A=="ADC":
+            plt.savefig("interfaz/ADCtemp.png")
             variablesCompartidas["graficoADC"]=plt.gcf()
         if A=="Audio":
+            plt.savefig("interfaz/Audiotemp.png")
             variablesCompartidas["graficoAudio"]=plt.gcf()
     try:
         l=[]
