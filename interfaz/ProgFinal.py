@@ -11,7 +11,7 @@ import json
 import threading
 import librosa
 import librosa.display
-from scipy.signal import butter,filtfilt
+from scipy.signal import butter,filtfilt,find_peaks
 import matplotlib.pyplot as plt
 import wave
 
@@ -62,7 +62,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
     
     neutroPWM=1485
     def succionMinPWM():
-        return turbina[0]
+        return turbina[0] #valores modificados por slider de la interfaz, usar como entrada en turbinaPWM()
     def succionMaxPWM():
         return turbina[1]
     def expulsionPWM():
@@ -211,7 +211,7 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
     
     def leerADC():
         out=0x000000
-        for	j in range(24):
+        for	j in range(24):#entre 1 y 24, dependiendo de cuantos bits se quieren leer
             aux = recivir() & 0x000001
             aux = aux <<(23-j)
             out += aux
@@ -221,7 +221,17 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
             out = -(((~out) & 0x7FFFFF )+1)
         out=out/8388608*5.0
         return out
-        
+
+    def algoritmoDeteccion(val):
+        m=np.mean(val)
+        if (max(val)>m+0.001) and (min(val)<m-0.0003):
+            i=np.argmax(val)
+            j=np.argmin(val)
+            if j>i:#0<j-i<11:
+                if (max(val)>np.mean(val[:i+1])+0.0005) and (min(val)<np.mean(val[j:])-0.00015):
+                    return 3
+        return 0
+
     #Deteccion de entrada de mosquitos al sistema
     def deteccionMosquito():
         
@@ -237,7 +247,9 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
         seleccionADC()
         seleccionSPS()
         rdatac()
-        threshold=0.01 #volts
+        #threshold=0.01 #volts
+        lectura=np.array([])
+        auxk=0
         while True:
             if cierre.is_set():
                 SDATAC()
@@ -256,18 +268,28 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
             turbinaPWM(succionMaxPWM())
             while(wiringpi.digitalRead(DRDY)):
                 pass
-            out=leerADC()
-            if out>threshold or out<-threshold:
-                
+            lectura=np.append(lectura,leerADC())
+            while(not wiringpi.digitalRead(DRDY)):
+                pass
+            i=len(lectura)
+            if i%5==0 and i>=15:
+                if auxk:
+                    auxk-=1
+                else:
+                    auxk=algoritmoDeteccion(lectura[-15:])
+                    if auxk:
+                        variablesCompartidas["MosquitosEnLaTrampa"]+=1
+                lectura=np.delete(lectura,[0,1,2,3,4])
+
+
+            if variablesCompartidas["MosquitosAIngresar"]==variablesCompartidas["MosquitosEnLaTrampa"]:
                 SDATAC()
                 wiringpi.digitalWrite(CS2, True)
                 wiringpi.pinMode(SCLK, GPIO.INPUT)
                 wiringpi.pinMode(MOSI, GPIO.INPUT)
                 wiringpi.pinMode(CS2, GPIO.INPUT)
-                variablesCompartidas["MosquitosEnLaTrampa"]+=1
                 return True
-            while(not wiringpi.digitalRead(DRDY)):
-                pass
+            
 
     def Opt101ADC(t=10):
         #t=10#s
@@ -354,9 +376,6 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
             high = fc_high / nyquist
             b, a = butter(6, [low, high], btype='band')
             x = filtfilt(b, a, x)
-        
-            #b, a = butter(7, [820/ nyquist, 830/ nyquist], btype='bandstop')
-            #x = filtfilt(b, a, x)
         
         if A=="ADC":
             n_fft=512
@@ -459,7 +478,11 @@ def mainPPI(queueSal,queueEnt,cierre,turbina,variablesCompartidas):
                     turbinaPWM(succionMinPWM())   
                 else:
                     revisarEnt()
-                    turbinaPWM(neutroPWM)   
+                    NuevoEstado("Deteccion\nCancelada")
+                    if variablesCompartidas["MosquitosEnLaTrampa"]>0:
+                        turbinaPWM(succionMinPWM())
+                    else:
+                        turbinaPWM(neutroPWM) 
                 finAccion()
 
             if Accion=="Audio" or Accion=="ADC" or Accion=="Audio+Infrarrojo":

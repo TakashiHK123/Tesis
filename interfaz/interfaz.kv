@@ -128,11 +128,14 @@ WindowManager:
         size_hint: .245,.0625
         font_size: 17
         pos_hint: {"center_x":0.125,"center_y":0.65625}
-        disabled:not app.modoManual or not app.pCorriendo or app.ocupado
-        text: "Detectar Mosquito"
+        disabled:not app.modoManual or not app.pCorriendo or (app.ocupado and not app.detectando)
+        text: ["Detectar Mosquito","Cancelar"][app.detectando]
         on_release: 
-            if app.pCorriendo: app.qSal.put("Posicion Inicial")
-            if app.pCorriendo: app.ocupado=True
+            if app.pCorriendo and app.detectando: app.qSal.put("Cancelar")
+            if app.pCorriendo and not app.detectando: app.qSal.put("Posicion Inicial")
+            if app.pCorriendo and not app.detectando: app.ocupado=True
+            if app.pCorriendo and not app.detectando: app.detectando=True
+            
     Button: 
         id:tipoDemedicion
         size_hint: .2,.1
@@ -401,7 +404,7 @@ WindowManager:
         size_hint: .1,.1
         pos_hint: {"left":1,"bottom":1}
         text: "Mediciones\nGuardadas"
-        font_size: 17
+        font_size: 15
         on_release: 
             app.root.current = "fourth"
             root.manager.transition.direction = "right"
@@ -623,6 +626,22 @@ WindowManager:
         on_release: 
             app.root.current = "third"
             root.manager.transition.direction = "left"
+
+    Label:
+        size_hint: .1,.1
+        pos_hint: {"right":1,"top":0.2}
+        text: "Mediciones\nGuardadas"
+        text_size:self.size
+        font_size: 15
+        halign:'center'
+        valign:'middle'
+
+    Widget:
+        Image:
+            source:"interfaz/FIUNA.png"
+            fit_mode: "contain"
+            pos: root.width *0.77,root.height*0.75
+            size: root.width *0.25,root.height*0.25
 
     BoxLayout:
         id:mediciones

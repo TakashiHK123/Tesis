@@ -77,9 +77,9 @@ void seleccionADC(){
 }
 
 
-double leerADC(){
+double leerADC(int bits){ //entre 1 y 24, dependiendo de cuantos bits se quieren leer
 	long aux,out=0,signo;
-	for (int j=0;j<24;j++){
+	for (int j=0;j<bits;j++){
 		aux = recivir() & 0x000001;
 		aux = aux <<(23-j);
 		out += aux;}
@@ -112,11 +112,12 @@ int main(int argc, char *argv[])
 	unsigned long n = atoi(argv[1]);
 	//int n=37500;
 	double datos[n];
+	while(!digitalRead(DRDY)){}
 	long tiempo=millis();
 	
 	for (unsigned long i=0;i<n;i++){
 		while(digitalRead(DRDY)){}
-		datos[i]=leerADC();
+		datos[i]=leerADC(24);//entre 1 y 24, dependiendo de cuantos bits se quieren leer
 		while(!digitalRead(DRDY)){}
 	
 	}

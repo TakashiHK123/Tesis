@@ -86,7 +86,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                             pass
                     self.q.put(frame)
             except:
-                pass#print("popo")
+                pass
 
         def read(self):
             if self.q.empty():
@@ -98,7 +98,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.cap.release()
                 self.t.join()
             except:
-                print("cagada")
+                pass#print("algo")
         
         def isOpened(self):
             return self.cap.isOpened()
@@ -135,6 +135,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
         botonScript=StringProperty("Iniciar Programa")
         ultimaMedicion=StringProperty("nada")
         ultimoGrafico=StringProperty("nada")
+        detectando=BooleanProperty(False)
         contM=NumericProperty(0)
         contH=NumericProperty(0)
         contMix=NumericProperty(0)
@@ -241,7 +242,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
             a=self.error.split("\n")
             self.error="\n".join(a[-4:])
 
-        def checkQueue(self,dt=0):
+        def checkQueue(self,dt=0): #mirar ProgFinal.py para entender
             if not self.qEnt.empty():
                 A=self.qEnt.get()
                 if A=="Audio" or A=="ADC" or A=="Audio+Infrarrojo":
@@ -254,7 +255,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     self.guardado=False
                     self.ultimaMedicion=A
                     self.graficar("ADC")
-                elif A=="Infrarrojo+Video1":
+                elif A=="Infrarrojo+Video1": 
                     self.grabarVideo()
                 elif A=="error":
                     x=self.qEnt.get()
@@ -277,12 +278,13 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                             
                 elif A=="FinAccion":
                     self.ocupado=False
+                    self.detectando=0
 
                 elif A=="video" or A=="videoyadc":
                     self.cap = VideoCapture(0)#VideoCapture('http://192.168.100.26:8080/video')
                     if not self.cap.isOpened():
                         self.mensajeError("Error con la camara")
-                        print("Error: No se puede acceder a la cámara. ¿Está conectada correctamente?")
+                        #print("Error: No se puede acceder a la cámara. ¿Está conectada correctamente?")
                         self.qSal.put("Error")
                         self.ocupado=False
                     else:
@@ -392,6 +394,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 self.pararPrograma()
             else:
                 self.pCorriendo=1
+                self.detectando=0
                 self.ocupado=False
                 self.qEnt=Queue() 
                 self.qSal=Queue() 
@@ -440,6 +443,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                     print("error al cerrar")
                     self.mensajeError("Error al cerrar")
             self.pCorriendo=0
+            self.detectando=0
             self.ocupado=False
             self.estado=""
             # self.estado='Trampa\nApagada'
@@ -483,6 +487,7 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
                 for archivo in os.listdir("mediciones/"+["camara","infrarrojo","microfono"][self.carpeta]):
                     if archivo.endswith(".png") or archivo.endswith(".jpg"):
                         self.archivos.append("mediciones/"+["camara","infrarrojo","microfono"][self.carpeta]+"/"+archivo)
+                self.archivos=sorted(self.archivos)
 
         # def changeVideo(self):
         #     # aux=self.root.get_screen('fourth').ids.mediciones.children
@@ -505,15 +510,13 @@ if __name__ == '__main__': #tuve que hacer esto para que no se abra una segunda 
 
 if __name__ == '__main__':
     
-    # Config.set('graphics', 'resizable', '0')
-    # Config.set('graphics', 'width', '480')
-    # Config.set('graphics', 'height', '320')
     if os.name== 'nt':
         Window.size = (800, 600)
     if os.name== 'posix':
         Window.fullscreen = True
         #Window.maximize()
-    #os.system("xrandr --output HDMI-1 --mode 720x480")
     Innterfaz().run()
     #print(os.name)
+    if os.name== 'posix':
+        os.system("xrandr --output HDMI-1 --mode 1280x720")
 
